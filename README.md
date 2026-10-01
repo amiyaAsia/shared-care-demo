@@ -2,7 +2,9 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `d3df6cc43f7c1d1055fe913c97bc82053f161261`, directory `demo/amiya-shared-care/`.39 reviewed files:9 runtime/assets and30 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build.
+Source revision: `amiyaAsia/CareLab` merge `c63b4fb08a3e6e450d0d99687093f30050a19059`, directory `demo/amiya-shared-care/`.39 reviewed files:9 runtime/assets and30 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build.
+
+Centre: new joiner Hui Lin and peer Sam report to registered nurse Priya, who sets the shift plan and leads care decisions. Lin coordinates the programme without medication responsibilities. Alex manages centre resources. Home care retains care partner/manager Lin and care provider manager Alex. Persistent fictional label/sources retained; repeated caveats removed from narrative.
 
 Captioned guided autoplay proceeds through all scenes; reduced-motion users choose Play. Optional English narration uses prerecorded Azure Speech Isla (synthetic Australian woman), with scene-led narration and sentence pauses matching the English captions. Chinese uses browser speech. Sound needs activation. Setting/chapter changes and hidden tabs pause playback. Home care features care partner/manager Lin and care provider manager Alex; clinical decisions remain with external professionals.
 
