@@ -1,4 +1,5 @@
-import { STORIES, LABELS, ROLES, SOURCES, requiresManualAdvance } from './story.js';
+import { STORIES, LABELS, ROLES, SOURCES, roleFor } from './story.js';
+import { GuidedPlayer, readingDuration } from './playback.js';
 import { emptySession, loadSession, saveSession, resetSession, replay } from './memory.js';
 import { renderScene } from './scene.js';
 const $ = id => document.getElementById(id);
@@ -7,6 +8,9 @@ try { storage = window.localStorage; } catch { storage = null; }
 const lengths = Object.fromEntries(Object.entries(STORIES).map(([key, frames]) => [key, frames.length]));
 let session = storage ? loadSession(storage, lengths) : emptySession();
 let playing = false, timer = null, reading = false, generation=0, viewpoint='team', choice=null;
+let player=new GuidedPlayer(STORIES[session.setting],session.positions[session.setting],session.language);
+const narration=new Audio();narration.preload='none';let audioFailed=false;
+narration.id='guidedNarration';narration.hidden=true;document.body.append(narration);
 const words = (en, zh) => session.language === 'zh' ? zh : en;
 const local = value => typeof value === 'string' ? value : value?.[session.language] || '';
 const current = () => STORIES[session.setting][session.positions[session.setting]];
@@ -19,28 +23,47 @@ function persist() {
 function stop() {
   generation++;
   playing = false; clearTimeout(timer); timer = null;
+  player.pause();narration.pause();narration.onended=null;narration.onerror=null;
   window.speechSynthesis?.cancel();
   $('play').textContent = words('Play story', '播放故事');
   document.body.dataset.playing = 'false';
 }
-function duration(frame) { return Math.max(6500, local(frame.caption).length * (session.language === 'zh' ? 180 : 55)); }
+function duration(frame) { return readingDuration(frame,session.language); }
+function syncPlayer(){player=new GuidedPlayer(STORIES[session.setting],session.positions[session.setting],session.language);}
 function schedule() {
   clearTimeout(timer);
   const token=++generation;
-  if (!playing || requiresManualAdvance(current()) || session.positions[session.setting] >= lengths[session.setting] - 1) { stop(); return; }
-  if (reading && window.speechSynthesis) {
+  if (!playing) { stop(); return; }
+  const last=session.positions[session.setting]===lengths[session.setting]-1;
+  if(reading && session.language==='en'){
+    narration.src=`assets/narration/${current().id}.m4a`;
+    let completed=false;
+    const finish=()=>{if(completed||token!==generation||!playing)return;completed=true;clearTimeout(timer);timer=setTimeout(last?stop:advance,1200);};
+    const fallback=()=>{if(token!==generation||!playing)return;audioFailed=true;renderVoice();clearTimeout(timer);timer=setTimeout(last?stop:advance,duration(current()));};
+    narration.onended=finish;narration.onerror=fallback;
+    narration.play().catch(fallback);
+    // Do not strand the presentation if a browser fails to emit ended/error.
+    timer=setTimeout(()=>{if(token===generation&&playing){narration.pause();fallback();}},120000);
+  } else if (reading && window.speechSynthesis) {
     const speech = new SpeechSynthesisUtterance(local(current().caption)); speech.lang = session.language === 'zh' ? 'zh-CN' : 'en-GB';
-    speech.onend = () => { if (playing && token===generation) timer = setTimeout(advance, 1000); };
-    speech.onerror = () => { if (playing && token===generation) timer = setTimeout(advance, duration(current())); };
+    const fallback=()=>{if(playing&&token===generation){clearTimeout(timer);timer=setTimeout(last?stop:advance,duration(current()));}};
+    speech.onend = () => { if (playing && token===generation){clearTimeout(timer);timer = setTimeout(last?stop:advance, 1000);} };
+    speech.onerror = fallback;
     window.speechSynthesis.cancel(); window.speechSynthesis.speak(speech);
-  } else timer = setTimeout(advance, duration(current()));
+    timer=setTimeout(fallback,120000);
+  } else {
+    if(last){timer=setTimeout(stop,duration(current()));return;}
+    player.play();
+    const tick=()=>{if(token!==generation||!playing)return;if(player.tick(250)){advance();return;}timer=setTimeout(tick,250);};
+    timer=setTimeout(tick,250);
+  }
 }
 function advance() {
   if (!playing) return;
   session.positions[session.setting]++;
+  syncPlayer();
   render();
-  if (requiresManualAdvance(current()) || session.positions[session.setting] >= lengths[session.setting] - 1) stop();
-  else schedule();
+  schedule();
 }
 const statusLabels = {
   planned: ['Planned', '已计划'], blocked:['Blocked · decision declined','受阻 · 请求未获批准'], 'awaiting-decision': ['Awaiting human decision', '等待人类决定'],
@@ -61,10 +84,11 @@ function renderMemory(frame) {
   for (const task of Object.values(memory.tasks)) {
     if(viewpoint==='Grace' && (task.owner!=='Grace' || task.id!=='supplies'))continue;
     const card = node('div', '', `task-card${task.status !== 'completed' ? ' pending' : ''}`); card.dataset.task = task.id; card.dataset.status = task.status;
-    card.append(node('h4', `${task.person} · ${local(task.label)}`), node('span', words(...statusLabels[task.status]), 'task-state'),
-      node('p', `${words('Responsible', '负责人')}: ${task.owner} · ${local(ROLES[task.owner])}`), node('p', `${words('Source', '来源')}: ${local(task.source)}`, 'source-line'));
+    const external=Boolean(memory.contacts[task.id]&&session.setting==='home');
+    card.append(node('h4', `${task.person} · ${local(task.label)}`), node('span', external?words('Awaiting external clinical response','等待外部临床回应'):words(...statusLabels[task.status]), 'task-state'),
+      node('p', `${words('Responsible', '负责人')}: ${task.owner} · ${local(roleFor(task.owner,session.setting))}`), node('p', `${words('Source', '来源')}: ${local(task.source)}`, 'source-line'));
     const request = Object.values(memory.requests).find(r => r.task === task.id);
-    if (request && viewpoint!=='Grace') card.append(node('p', `${words('Decision', '决定')}: ${request.approver} · ${request.status === 'pending' ? words('pending', '待处理') : request.status==='declined'?words('declined','未批准'):words('approved', '已批准')}`), node('p', local(request.decision || request.reason), 'source-line'));
+    if (request && viewpoint!=='Grace') card.append(node('p', `${external?words('Follow-up owner','跟进负责人'):words('Decision', '决定')}: ${request.approver} · ${request.status === 'pending' ? words('pending', '待处理') : request.status==='declined'?words('declined','未批准'):words('approved', '已批准')}`), node('p', local(request.decision || request.reason), 'source-line'));
     const contact=memory.contacts[task.id];
     if(contact && viewpoint!=='Grace')card.append(node('p',local(contact.text)),node('p',contact.status==='awaiting-reply'?words('Doctor reply not yet received.','尚未收到医生回复。'):words('Doctor response received for nurse review.','医生回应已收到，交由护士核对。'),'source-line'));
     const note = memory.notes.find(n => n.id === task.note);
@@ -90,7 +114,7 @@ function renderChapters() {
   for (const chapter of chapters) {
     const button = node('button', local(LABELS[chapter])); button.dataset.chapter = chapter;
     if (current().chapter === chapter) button.setAttribute('aria-current', 'step');
-    button.onclick = () => { stop(); choice=null;viewpoint='team';session.positions[session.setting] = STORIES[session.setting].findIndex(f => f.chapter === chapter); render(); document.querySelector(`[data-chapter="${chapter}"]`).focus(); };
+    button.onclick = () => { stop(); choice=null;viewpoint='team';session.positions[session.setting] = STORIES[session.setting].findIndex(f => f.chapter === chapter);syncPlayer();render(); document.querySelector(`[data-chapter="${chapter}"]`).focus(); };
     $('chapters').append(button);
   }
 }
@@ -106,15 +130,15 @@ function render() {
   for (const setting of ['centre','home']) { $(`${setting}Tab`).textContent = local(LABELS[setting]); $(`${setting}Tab`).setAttribute('aria-pressed', String(session.setting === setting)); }
   renderChapters();
   $('location').textContent = local(frame.location); $('sceneTitle').textContent = local(frame.title);
-  $('speaker').textContent = frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(ROLES[frame.speaker])}`;
+  $('speaker').textContent = frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(roleFor(frame.speaker,session.setting))}`;
   $('caption').textContent = local(frame.caption); $('physicalAction').textContent = local(frame.action);
   renderScene($('scene'), frame, session.setting, session.language);
   $('briefing').hidden = !frame.briefing; $('briefing').textContent = local(frame.briefing);
   $('transitionCard').hidden = !frame.boundary;
   const handover=['rehearsal','handover'].includes(frame.chapter);
   $('transitionTitle').textContent = handover?local(LABELS[frame.chapter]):words('Practice and workplace support use separate records.', '练习与工作支持使用独立记录。');
-  $('transitionText').textContent = handover?words('Check the outstanding items and their owners before continuing. Coordination acceptance does not transfer clinical authority.','继续前核对未完成事项及负责人。接手协调不代表转移临床权限。'):words('Continue deliberately. The workplace demonstration uses different fictional records; none of the practice completions carry over.', '请主动选择继续。工作演示使用另一套虚构记录，练习完成情况不会转入。');
-  $('practiceChoice').hidden=!(frame.memory==='practice'&&frame.cue==='buffer');
+  $('transitionText').textContent = handover?words('The team checks outstanding items and their owners. Coordination acceptance does not transfer clinical authority.','团队核对未完成事项及负责人。接手协调不代表转移临床权限。'):words('The demonstration now changes context. Workplace records are separate; practice completions never carry over.', '演示现在切换场景。工作记录独立保存，练习完成情况不会转入。');
+  $('practiceChoice').hidden=true;
   $('choicePrompt').textContent=words('Practice decision: what do you need next? Both actions keep the human decision pending.','练习决定：接下来需要什么？以下操作均不会自动批准请求。');
   $('inspectPending').textContent=words('Inspect pending work','查看待办事项');$('contactHuman').textContent=words('Contact the responsible person','联系负责人');
   $('choiceFeedback').textContent=choice==='inspect'?words('The request is retained, with a named decision owner. It is still unapproved.','请求已保留，并有明确决策负责人。尚未获批。'):choice==='contact'?words('Direct team contact is requested. A live service would connect you through its established human-help route; this demo stages that request.','已请求直接联系团队。实际服务将通过既定人类求助渠道连接；本演示为预设请求。'):'';
@@ -125,13 +149,13 @@ function render() {
   $('progress').value = (session.positions[session.setting] + 1) / lengths[session.setting] * 100;
   $('previous').disabled = session.positions[session.setting] === 0; $('next').disabled = session.positions[session.setting] === lengths[session.setting] - 1;
   $('previous').textContent = words('← Back', '← 返回');
-  $('next').textContent = frame.chapter==='transition' ? words('Enter workplace story →', '进入工作故事 →') : words('Continue →', '继续 →');
-  $('play').disabled = requiresManualAdvance(frame) || $('next').disabled;
-  $('play').textContent = playing ? words('Pause', '暂停') : words('Play story', '播放故事');
-  $('read').textContent = words('Read aloud', '朗读'); $('read').setAttribute('aria-pressed', String(reading)); $('read').disabled = !window.speechSynthesis;
+  $('next').textContent = words('Next scene →', '下一幕 →');
+  $('play').disabled = false;
+  $('play').textContent = playing ? words('Pause', '暂停') : words('Play guided demonstration', '播放引导演示');
+  renderVoice();
   $('restart').textContent = words('Restart this setting', '重新开始本场景');
   $('resetAll').textContent=words('Reset demo','重置演示');
-  $('playbackHint').textContent = words('Use Continue to inspect each step. Playback pauses at the practice-to-work boundary. Voice updates are authored demonstrations; no microphone is used.', '使用“继续”逐步查看。播放在练习到工作的转换处暂停。语音更新是预设演示，不使用麦克风。');
+  $('playbackHint').textContent = words('The guided demonstration advances automatically, including clearly labelled practice, workplace and handover scenes. Enable narration to hear an Australian woman’s voice. All decisions and records shown are staged.', '引导演示自动播放，包括清晰标注的练习、工作与交接场景。开启旁白可收听配音。所有决定和记录均为预设。');
   $('mapTitle').textContent = words('The same support pattern, separate memories', '相同支持方式，独立保存记忆');
   $('mapContent').replaceChildren();
   for (const [title, text] of [
@@ -142,19 +166,25 @@ function render() {
   $('footerText').textContent = words('Authored demonstration for discovery. Required practical assessment and professional decisions remain with people.', '用于探索需求的预设演示。必要实操评估与专业决定仍由人负责。');
   persist();
 }
-$('next').onclick = () => { stop(); choice=null;viewpoint='team';if (!$('next').disabled) { session.positions[session.setting]++; render(); } };
-$('previous').onclick = () => { stop();choice=null;viewpoint='team';if (!$('previous').disabled) { session.positions[session.setting]--; render(); } };
-$('restart').onclick = () => { stop();choice=null;viewpoint='team';session.positions[session.setting] = 0; render(); };
-$('resetAll').onclick=()=>{stop();if(storage)resetSession(storage);session=emptySession();viewpoint='team';choice=null;render();};
+function renderVoice(){
+  $('read').textContent=reading?words('Narration: on','旁白：开'):words('Narration: off','旁白：关');
+  $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=session.language==='zh'&&!window.speechSynthesis;
+  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captioned playback continues.','音频不可用；字幕演示继续。'):session.language==='en'?words('Recorded synthetic Australian woman’s voice · Karen · measured pace','预录合成澳大利亚女性语音 · Karen · 舒缓语速'):words('Chinese narration uses your browser voice.','中文旁白使用浏览器语音。');
+}
+$('next').onclick = () => { stop(); choice=null;viewpoint='team';if (!$('next').disabled) { session.positions[session.setting]++;syncPlayer(); render(); } };
+$('previous').onclick = () => { stop();choice=null;viewpoint='team';if (!$('previous').disabled) { session.positions[session.setting]--;syncPlayer(); render(); } };
+$('restart').onclick = () => { stop();choice=null;viewpoint='team';session.positions[session.setting] = 0;syncPlayer();playing=true; render();schedule(); };
+$('resetAll').onclick=()=>{stop();if(storage)resetSession(storage);session=emptySession();viewpoint='team';choice=null;syncPlayer();render();};
 $('inspectPending').onclick=()=>{stop();choice='inspect';render();$('inspectPending').focus();};
 $('contactHuman').onclick=()=>{stop();choice='contact';render();$('contactHuman').focus();};
 $('play').onclick = () => { if (playing) { stop(); return; } playing = true; render(); schedule(); };
-$('read').onclick = () => { reading = !reading; $('read').setAttribute('aria-pressed', String(reading)); window.speechSynthesis?.cancel(); if (playing) schedule(); };
-$('language').onclick = () => { stop(); session.language = session.language === 'en' ? 'zh' : 'en'; render(); };
-for (const setting of ['centre','home']) $(`${setting}Tab`).onclick = () => { stop();viewpoint='team';choice=null;session.setting = setting; render(); };
+$('read').onclick = () => { const wasPlaying=playing;stop();reading = !reading;audioFailed=false;playing=wasPlaying;render();if(playing)schedule(); };
+$('language').onclick = () => { stop(); session.language = session.language === 'en' ? 'zh' : 'en';if(session.language==='zh'&&!window.speechSynthesis)reading=false;syncPlayer();render(); };
+for (const setting of ['centre','home']) $(`${setting}Tab`).onclick = () => { stop();viewpoint='team';choice=null;session.setting = setting;syncPlayer();render(); };
 $('sources').onclick = () => {
   stop(); $('sourceTitle').textContent = words('Evidence and scope', '证据与范围'); $('closeSources').textContent = words('Close', '关闭');
   $('sourceBody').replaceChildren(node('p', words('The demo illustrates a proposed service. Responses, people, authorisations and records are staged. It has no backend, live AI, microphone input, real account or clinical approval. Browser progress and task state work locally.', '演示说明拟议服务。回应、人物、授权及记录均为预设。没有后端、实时 AI、麦克风输入、真实账号或临床批准。浏览器进度与任务状态在本地运行。')));
+  $('sourceBody').append(node('p',words('English audio is prerecorded synthetic speech using Karen, an Australian woman’s system voice, at a measured pace. Chinese read-aloud uses browser synthesis. Sound starts only when enabled.','英语音频为预录合成语音，使用澳大利亚女性系统声音 Karen，语速舒缓。中文朗读使用浏览器合成语音。声音仅在开启后播放。')));
   for (const source of SOURCES) {
     const item = node('div', '', 'source-item'); const link = node('a', source.title); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; item.append(link, node('p', local(source.note))); $('sourceBody').append(item);
   }
@@ -164,3 +194,5 @@ $('sources').onclick = () => {
 $('closeSources').onclick = () => $('sourceDialog').close();
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 render();
+// Silent autoplay obeys browser audio policy. Reduced-motion users choose Play.
+if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!document.hidden&&session.positions[session.setting]<lengths[session.setting]-1){playing=true;render();schedule();}

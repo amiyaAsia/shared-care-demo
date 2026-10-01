@@ -75,7 +75,9 @@ export function applyEvent(memory, event) {
       break;
     }
     case 'contact':
-      if (!task?.clinical || actorRoles[event.actor] !== 'nurse' || task.owner !== event.actor) throw new Error('Nurse-owned clinical contact required');
+      if(event.externalCoordination){
+        if(next.setting!=='home'||task?.clinical||actorRoles[event.actor]!=='coordinator'||task.owner!==event.actor)throw new Error('Care-partner coordination required');
+      }else if (!task?.clinical || actorRoles[event.actor] !== 'nurse' || task.owner !== event.actor) throw new Error('Nurse-owned clinical contact required');
       if (!['awaiting-reply','reply-received'].includes(event.status)) throw new Error('Explicit contact state required');
       if (event.status === 'reply-received' && !next.contacts[event.task]) throw new Error('Existing contact required');
       next.contacts[event.task] = { actor:event.actor, status:event.status, text:event.text, at:event.at };
