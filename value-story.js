@@ -156,5 +156,37 @@ export function valueStories(){
  homeFrames.find(f=>f.id==='home-prepare').people=['Sara','Wei','Amanda','Mr Wong'];
  homeFrames.find(f=>f.id==='home-p-title').caption=b('In rehearsal, Sara reports a preferred change but leaves out the service plan. Wei helps her identify what is missing: the agreed tasks and Mr Wong’s preference. Sara retries with a complete request, ready for Amanda to review.','练习中 Sara 报告偏好变化却未关联服务计划。Wei 帮她发现缺少约定任务及黄先生偏好。Sara 重试完整请求，交给 Amanda 核对。');
  homeFrames.find(f=>f.id==='home-p-title').people=['Sara','Wei','Amanda'];
+ const agreed=homeFrames.find(f=>f.id==='home-w-owner');
+ agreed.events.push(event('hw-followup-plan','plan',{task:'followup',person:'Mr Wong',actor:'Amanda',label:b('Check whether the agreed routine still suits Mr Wong','确认约定顺序是否仍适合黄先生'),source:b('Amanda’s service-review follow-up','Amanda 的服务复核跟进'),sourceId:'home-plan'}),event('hw-followup-delegate','delegate-followup',{task:'followup',actor:'Amanda',assignee:'Wei'}));
+ agreed.action=b('Amanda assigns a participant-preference follow-up to Wei for the next visit.','Amanda 将下次探访的偏好跟进交给 Wei。');
+ const receipt=homeFrames.find(f=>f.id==='home-p-complete');
+ receipt.events.push(event('hw-followup-accept','accept',{task:'followup',actor:'Wei'}));
+ receipt.action=b('Wei receives the current arrangement and accepts the separate follow-up.','Wei 收到当前安排，并接受另一项跟进任务。');
+ const followupScenes=[
+ scene('home-followup-reminder','followup','workplace','A reminder prompts the next step',
+ 'Amanda has asked Wei to check whether the agreed routine still suits Mr Wong. At the next visit, the reminder reaches Wei alongside the current plan. He asks Mr Wong directly. Shared memory turns a recorded change into a follow-up with a person responsible.',
+ 'Amanda 请 Wei 确认约定顺序是否仍适合黄先生。下次探访时，提醒与当前计划一起传给 Wei。他直接询问黄先生。共享记忆将已记录变化转为有明确责任人的跟进。',['Wei','Mr Wong','Amanda'],
+ [event('hw-followup-remind','remind',{task:'followup',actor:'Wei'})],{kind:'reminder',task:'followup',question:b('Ask Mr Wong whether this arrangement still suits him.','询问黄先生，这个安排是否仍适合他。')}),
+ scene('home-followup-draft','followup','workplace','Speak the outcome; check the draft',
+ 'Mr Wong says the order still suits him today. Wei captures his words and the completed follow-up in one short update. Amiya links it to Mr Wong, the follow-up and Wei as the author. The draft waits for Wei’s check before anything is marked complete.',
+ '黄先生说今天仍喜欢这个顺序。Wei 用一条简短更新记录他的回应及已做的跟进。Amiya 关联黄先生、跟进任务及作者 Wei。草稿等待核对，尚不标为完成。',['Wei','Mr Wong'],
+ [event('hw-followup-report','report',{task:'followup',actor:'Wei',text:b('Mr Wong said the agreed order still suits him today. Preference follow-up performed.','黄先生说今天仍喜欢约定顺序，偏好跟进已执行。')})],{kind:'capture',utterance:b('Mr Wong says breakfast first still suits him today. I’ve completed the preference check.','黄先生说今天仍喜欢早餐优先。我已完成偏好询问。'),note:'hw-followup-report',flow:true}),
+ scene('home-followup-confirm','followup','workplace','The reviewed result returns to Amanda',
+ 'Wei confirms that the draft matches Mr Wong’s response. The follow-up is completed and its reminder clears. Amanda sees the reviewed result with its author and time. A different response would stay as a new review request; this story closes the agreed preference check.',
+ 'Wei 确认草稿符合黄先生回应。跟进完成，提醒停止。Amanda 查看带作者与时间的核对结果。不同回应会进入新的复核请求；本故事完成约定偏好询问。',['Wei','Amanda'],
+ [event('hw-followup-confirm','confirm',{task:'followup',actor:'Wei'}),event('hw-followup-review','review-note',{note:'hw-followup-report',actor:'Amanda'})],{kind:'reuse',note:'hw-followup-report',task:'followup'})
+ ];
+ const last=homeFrames.pop();homeFrames.push(...followupScenes,last);
+ for(const f of homeFrames.filter(f=>f.chapter==='followup')){f.title.zh={'home-followup-reminder':'提醒带来下一步','home-followup-draft':'说出结果，核对草稿','home-followup-confirm':'核对结果返回 Amanda'}[f.id];f.location=b('Next scheduled visit · the following day','下次约定探访 · 翌日');}
+ for(const frames of [centre,homeFrames])for(const f of frames){
+  if(f.support?.kind==='capture')f.support.flow=true;
+  if(f.support?.kind==='feedback')f.support.flow=true;
+ }
+ centre.find(f=>f.id==='centre-w-request').support.waitingFor='Priya';
+ homeFrames.find(f=>f.id==='home-w-update').support.waitingFor='Amanda';
+ centre.find(f=>f.id==='centre-p-draft').support.notifications=[b('Hui Lin: cover arranged; continue assisting Mr Lee.','惠琳：接替已安排，继续协助李先生。'),b('Sam: accepted task and approved context received.','Sam：已接受任务，并收到批准的上下文。')];
+ // Re-time only the home narrative after inserting new review events/scenes.
+ const homeTicks={practice:9*60+20,workplace:14*60};
+ for(const f of homeFrames)for(const e of f.events){const t=homeTicks[f.memory]++;e.at=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;e.date=['followup','handover'].includes(f.chapter)?'Demo day 2':'Demo day 1';if(e.type==='report')e.observedAt=e.at;}
  return{centre,home:homeFrames};
 }

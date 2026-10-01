@@ -122,7 +122,8 @@ function renderSupport(frame){
  const panel=$('supportMoment');panel.replaceChildren();panel.hidden=!frame.support;
  if(!frame.support)return;
  const s=frame.support,memory=frame.memory?replay(STORIES[session.setting],session.positions[session.setting],session.setting)[frame.memory]:null;
- panel.append(node('p',words('Amiya at this moment','此刻的 Amiya 支持'),'eyebrow'));
+  panel.append(node('p',words('Amiya at this moment','此刻的 Amiya 支持'),'eyebrow'));
+  if(s.waitingFor){const waiting=node('div','', 'waiting-context');waiting.append(node('strong',`${s.waitingFor} · ${words('currently occupied','当前在忙')}`),node('p',words('Request, explanation and task stay together while the human decision is pending.','人类决定待定时，请求、说明及任务共同保留。')));panel.append(waiting);}
  if(s.question)panel.append(node('p',local(s.question),'support-question'));
  if(s.answer)panel.append(node('p',local(s.answer),'support-answer'));
  let source=s.source;
@@ -145,7 +146,18 @@ function renderSupport(frame){
   else if(note)panel.append(node('p',words('Record awaits confirmation','记录等待确认')));
   if(s.task&&memory.tasks[s.task])panel.append(node('p',`${local(memory.tasks[s.task].label)} · ${memory.tasks[s.task].owner}`));
  }
- if(source){const details=document.createElement('details');details.className='source-detail';details.append(node('summary',`${words('Approved source','批准来源')}: ${local(source.title)} · v${source.version}`),node('p',local(source.text)),node('p',`${source.author} · ${source.date||words('assignment briefing','任务简报')} · ${source.at||''}`));panel.append(details);}
+  if(source){const details=document.createElement('details');details.className='source-detail';details.append(node('summary',`${words('Approved source','批准来源')}: ${local(source.title)} · v${source.version}`),node('p',local(source.text)),node('p',`${source.author} · ${source.date||words('assignment briefing','任务简报')} · ${source.at||''}`));panel.append(details);}
+  if(s.flow&&s.kind==='capture'){
+    const note=memory.notes.find(n=>n.id===s.note),flow=node('div','','capture-flow');
+    for(const [heading,text] of [
+      [words('1 · Spoken update','1 · 语音更新'),local(s.utterance)],
+      [words('2 · Matched context','2 · 关联上下文'),note?`${note.person} · ${note.task} · ${note.author}`:''],
+      [words('3 · Review the draft','3 · 核对草稿'),note?local(note.text):''],
+      [words('4 · Record and handover','4 · 记录与交接'),note?.status==='confirmed'?`${note.id} · ${words('same reviewed record','同一已核对记录')}`:words('Waiting for the author’s confirmation','等待作者确认')]
+    ]){const step=node('div','','capture-step');step.append(node('strong',heading),node('p',text));flow.append(step);}panel.prepend(flow);
+  }
+  if(s.flow&&s.kind==='feedback')panel.append(node('p',words('First attempt → specific feedback → complete retry in the next scene','首次尝试 → 明确反馈 → 下一幕完整重试'),'practice-flow'));
+  for(const text of s.notifications||[])panel.append(node('p',local(text),'team-update'));
 }
 function render() {
   const frame = current();
