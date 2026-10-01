@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Amiya Shared Care: assignment preparation, team practice and shared-memory support for centre and home care. Fictional concept demo.">
+  <title>Amiya Shared Care</title><link rel="icon" href="assets/amiya-logo.png"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="./"><img src="assets/amiya-logo.png" alt="Amiya" width="44" height="44"><span>Amiya <strong>Shared Care</strong></span></a>
+    <div class="header-actions"><button id="language" aria-label="Change language">中文</button><button id="sources">Sources &amp; scope</button></div>
+  </header>
+  <main>
+    <section class="intro"><p class="eyebrow" id="tagline">Shared memory · reachable human judgement</p><h1 id="headline">One team. Support that continues.</h1>
+      <p id="introText">Prepare for the assignment, practise with the team, then stay supported during care.</p>
+      <p class="disclaimer" id="disclaimer">Scripted concept demo · fictional people and records · no live AI or clinical service</p>
+    </section>
+    <nav class="setting-tabs" aria-label="Care setting"><button id="centreTab" data-setting="centre" aria-pressed="true">Care centre</button><button id="homeTab" data-setting="home" aria-pressed="false">Care at home</button></nav>
+    <nav id="chapters" class="chapters" aria-label="Story chapters"></nav>
+    <section class="stage-heading"><div><p id="location" class="eyebrow"></p><h2 id="sceneTitle"></h2></div><span id="stageBadge" class="stage-badge"></span></section>
+    <div class="experience">
+      <section class="story-panel" aria-label="Care scene">
+        <div id="scene" class="scene"></div>
+        <div class="caption-panel" aria-live="polite" aria-atomic="true"><p id="speaker" class="speaker"></p><p id="caption" class="caption"></p><p id="physicalAction" class="physical-action"></p></div>
+        <div id="briefing" class="briefing" hidden></div>
+        <div id="practiceChoice" class="briefing" hidden><p id="choicePrompt"></p><button id="inspectPending">Inspect pending work</button> <button id="contactHuman">Contact the responsible person</button><p id="choiceFeedback" role="status"></p></div>
+        <div id="transitionCard" class="transition-card" hidden><h3 id="transitionTitle"></h3><p id="transitionText"></p></div>
+      </section>
+      <aside class="memory-panel" aria-labelledby="memoryTitle"><div class="memory-head"><span class="memory-mark">↔</span><div><h3 id="memoryTitle">Shared memory</h3><p id="memoryScope"></p></div></div>
+        <div id="viewControls" class="memory-views"></div><div id="memoryBody"></div>
+      </aside>
+    </div>
+    <section class="player" aria-label="Playback controls"><div class="progress-row"><span id="position"></span><progress id="progress" max="100" value="0" aria-label="Story progress"></progress></div>
+      <div class="controls"><button id="previous">← Back</button><button id="play">Play story</button><button id="next" class="primary">Continue →</button><button id="read" aria-pressed="false">Read aloud</button><button id="restart">Restart this setting</button><button id="resetAll">Reset demo</button></div>
+      <p id="playbackHint" class="hint"></p><p id="storageNotice" class="hint" role="status" hidden></p>
+    </section>
+    <section class="service-map" aria-labelledby="mapTitle"><h2 id="mapTitle">The same support pattern, separate memories</h2><div id="mapContent"></div></section>
+  </main>
+  <footer><span id="footerText">Authored demonstration for discovery. Required practical assessment and professional decisions remain with people.</span></footer>
+  <dialog id="sourceDialog" aria-labelledby="sourceTitle"><div class="dialog-head"><h2 id="sourceTitle">Evidence and scope</h2><button id="closeSources" autofocus>Close</button></div><div id="sourceBody"></div></dialog>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

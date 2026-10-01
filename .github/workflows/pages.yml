@@ -1,0 +1,55 @@
+name: Verify and deploy separate Amiya Shared Care
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: shared-care-pages-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Stage exact reviewed browser files
+        shell: bash
+        env:
+          EXPECTED_REPOSITORY: amiyaAsia/shared-care-demo
+          ACTUAL_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$ACTUAL_REPOSITORY" = "$EXPECTED_REPOSITORY"
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const expected=["index.html","styles.css","app.js","memory.js","story.js","scene.js","assets/amiya-logo.png"].sort();const names=readFileSync("SHA256SUMS","utf8").trim().split("\n").map(line=>{if(!/^[a-f0-9]{64}  [a-zA-Z0-9./-]+$/.test(line))throw Error("Invalid checksum line");return line.slice(66);}).sort();if(JSON.stringify(names)!==JSON.stringify(expected))throw Error("Checksum list must cover exactly seven files");'
+          sha256sum -c SHA256SUMS
+          mkdir -p dist/assets
+          for asset in index.html styles.css app.js memory.js story.js scene.js assets/amiya-logo.png; do
+            test -s "$asset"
+            cp "$asset" "dist/$asset"
+          done
+          for script in app.js memory.js story.js scene.js; do
+            node --input-type=module --check < "$script"
+          done
+          node --input-type=module -e 'import {readdirSync} from "node:fs"; const expected=["index.html","styles.css","app.js","memory.js","story.js","scene.js","assets/amiya-logo.png"].sort(); const actual=readdirSync("dist",{recursive:true,withFileTypes:true}).filter(e=>e.isFile()).map(e=>`${e.parentPath}/${e.name}`.replace(/^dist\//,"")).sort(); if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error("Unexpected public artifact");'
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    if: github.repository == 'amiyaAsia/shared-care-demo' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy only this repository's Pages site
+        id: deployment
+        uses: actions/deploy-pages@v4
