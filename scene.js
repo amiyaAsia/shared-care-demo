@@ -10,8 +10,8 @@ export function renderScene(container, frame, setting, language) {
   container.append(el('div', 'scene-title', frame.location[language]), el('div', 'room-window'), el('div', 'room-plant'));
   const people = el('div', 'scene-people');
   for (const name of frame.people) {
-    const kind = name === 'Priya' ? 'nurse' : name === 'Lin' ? 'coordinator' : name === 'Alex' ? 'manager' : name === 'Grace' ? 'supporter' : name.startsWith('Mr') ? 'recipient' : 'assistant';
-    const remote = setting === 'home' && ['Priya', 'Lin', 'Alex', 'Grace'].includes(name);
+    const kind = ['Priya','Amanda'].includes(name) ? 'nurse' : name === 'Lin' ? 'coordinator' : name === 'Alex' ? 'manager' : name === 'Grace' ? 'supporter' : name.startsWith('Mr') ? 'recipient' : 'assistant';
+    const remote = setting === 'home' && ['Amanda','Alex'].includes(name);
     const person = el('div', `person ${kind}${remote ? ' remote' : ''}`);
     const avatar = el('div', 'avatar'); avatar.setAttribute('aria-hidden', 'true');
     for (const part of ['hair', 'head', 'arm left', 'arm right', 'torso', 'leg left', 'leg right']) avatar.append(el('div', part));

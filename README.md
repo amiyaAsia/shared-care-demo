@@ -2,11 +2,11 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `681ce33db06691d52b6517dcf5b7d5ea86b4685f`, directory `demo/amiya-shared-care/`.38 reviewed files:10 runtime/assets and28 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+Source revision: `amiyaAsia/CareLab` merge `9eb1d2ada5f4c7588706558763136cdd1038dca3`, directory `demo/amiya-shared-care/`.38 reviewed files:10 runtime/assets and28 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
 
 Focused centre/home stories now demonstrate buffered care requests, source-linked recall, responsibility-following reminders, confirmed-record reuse and practice feedback. The home story follows a permitted routine change into the next worker's visit. Narration control sits beside Narrator below the scene.
 
-Centre: new joiner Hui Lin and peer Sam report to registered nurse Priya, who sets the shift plan and leads care decisions. Lin coordinates the programme without medication responsibilities. Alex manages centre resources. Home care retains care partner/manager Lin and care provider manager Alex. Persistent fictional label/sources retained; repeated caveats removed from narrative.
+Centre: Hui Lin and Sam report to registered nurse Priya; Lin coordinates programme, Alex resources. Home: new worker Sara, experienced worker peer Wei, and RN-qualified coordinating care partner Amanda. The source panel grounds duties in care-partner guide pp1–3 without implying every care partner is a nurse. Centre story/audio unchanged in this release.
 
 Captioned guided autoplay proceeds through all scenes; reduced-motion users choose Play. Optional English narration uses prerecorded Azure Speech Isla (synthetic Australian woman), with scene-led narration and sentence pauses matching the English captions. Chinese uses browser speech. Sound needs activation. Setting/chapter changes and hidden tabs pause playback. Home care features care partner/manager Lin and care provider manager Alex; clinical decisions remain with external professionals.
 

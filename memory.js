@@ -2,7 +2,7 @@
 export const STORAGE_KEY = 'amiya.shared-care.demo.v1';
 export const SETTINGS = ['centre', 'home'];
 export const STAGES = ['practice', 'workplace'];
-const actorRoles = { 'Hui Lin': 'assistant', Sam: 'assistant', Priya: 'nurse', Lin: 'coordinator', Alex: 'manager', Grace: 'supporter' };
+const actorRoles = { 'Hui Lin': 'assistant', Sam: 'assistant', Priya: 'nurse', Lin: 'coordinator', Alex: 'manager', Grace: 'supporter',Sara:'assistant',Wei:'assistant',Amanda:'nurse' };
 export function newMemory(setting, stage) {
   return { setting, stage, tasks: {}, requests: {}, contacts: {}, notes: [], events: [], revisions: [], handovers: [], sources:{},reminders:{},receipts:[] };
 }
