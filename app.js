@@ -72,7 +72,7 @@ const statusLabels = {
 };
 function renderMemory(frame) {
   $('memoryBody').replaceChildren();
-  const badge = frame.memory === 'practice' ? words('Practice · simulated shared memory', '练习 · 模拟共享记忆') : frame.memory === 'workplace' ? words('Workplace support · fictional demonstration', '工作支持 · 虚构演示') : words('Stage transition / orientation', '阶段转换／任务准备');
+  const badge = frame.memory === 'practice' ? words('Practice · simulated shared memory', '练习 · 模拟共享记忆') : frame.memory === 'workplace' ? words('Workplace support · shared memory', '工作支持 · 共享记忆') : words('Stage transition / orientation', '阶段转换／任务准备');
   $('stageBadge').textContent = badge; $('stageBadge').className = `stage-badge ${frame.memory || ''}`;
   $('memoryScope').textContent = frame.memory ? badge : words('No care task changes in this scene', '本场景不改变照护任务');
   if (!frame.memory) {
@@ -100,7 +100,7 @@ function renderMemory(frame) {
     $('memoryBody').append(card);
   }
   if(viewpoint==='Grace'){
-    $('memoryBody').append(node('p',words('Narrative viewpoint: Grace sees only the permitted household request. This is not an authenticated access-control demonstration.','故事视角：Grace 仅查看获准的生活用品请求。这不是经过身份验证的权限演示。'),'source-line'));return;
+    $('memoryBody').append(node('p',words('Grace sees the household follow-up agreed with Mr Wong.','Grace 查看与黄先生约定的生活用品跟进。'),'source-line'));return;
   }
   for(const handover of memory.handovers)$('memoryBody').append(node('p', `${words('Coordination handover','协调交接')}: ${handover.acceptedBy || words('awaiting acceptance','等待接手')} · ${handover.outstanding.length} ${words('outstanding items','项未完成事项')}`,'source-line'));
   const eventList = node('ol', '', 'event-list');
@@ -137,7 +137,7 @@ function render() {
   $('transitionCard').hidden = !frame.boundary;
   const handover=['rehearsal','handover'].includes(frame.chapter);
   $('transitionTitle').textContent = handover?local(LABELS[frame.chapter]):words('Practice and workplace support use separate records.', '练习与工作支持使用独立记录。');
-  $('transitionText').textContent = handover?words('The team checks outstanding items and their owners. Coordination acceptance does not transfer clinical authority.','团队核对未完成事项及负责人。接手协调不代表转移临床权限。'):words('The demonstration now changes context. Workplace records are separate; practice completions never carry over.', '演示现在切换场景。工作记录独立保存，练习完成情况不会转入。');
+  $('transitionText').textContent = handover?words('The team checks outstanding items and their owners.','团队核对未完成事项及负责人。'):words('Hui Lin moves from rehearsal into her working assignment.','惠琳从练习进入工作任务。');
   $('practiceChoice').hidden=true;
   $('choicePrompt').textContent=words('Practice decision: what do you need next? Both actions keep the human decision pending.','练习决定：接下来需要什么？以下操作均不会自动批准请求。');
   $('inspectPending').textContent=words('Inspect pending work','查看待办事项');$('contactHuman').textContent=words('Contact the responsible person','联系负责人');
@@ -155,7 +155,7 @@ function render() {
   renderVoice();
   $('restart').textContent = words('Restart this setting', '重新开始本场景');
   $('resetAll').textContent=words('Reset demo','重置演示');
-  $('playbackHint').textContent = words('The guided demonstration advances automatically, including clearly labelled practice, workplace and handover scenes. Enable narration to hear an Australian woman’s voice. All decisions and records shown are staged.', '引导演示自动播放，包括清晰标注的练习、工作与交接场景。开启旁白可收听配音。所有决定和记录均为预设。');
+  $('playbackHint').textContent = words('Follow the guided story through preparation, practice, supported work and handover. Enable narration to hear the story.','跟随引导故事查看准备、练习、工作支持及交接。开启旁白收听故事。');
   $('mapTitle').textContent = words('The same support pattern, separate memories', '相同支持方式，独立保存记忆');
   $('mapContent').replaceChildren();
   for (const [title, text] of [
@@ -163,7 +163,7 @@ function render() {
     [words('Practise with the team', '与团队一起练习'), words('Rehearse reporting, decisions and handover with simulated memory. Hands-on assessment remains separate.', '借助模拟记忆练习报告、决定与交接。实操评估仍需另行进行。')],
     [words('Stay supported at work', '工作中持续支持'), words('New and established workers share relevant changes, pending decisions and reviewed updates.', '新员工与现有员工共享相关变化、待定事项及已核对更新。')]
   ]) { const card = node('div', '', 'map-card'); card.append(node('h3', title), node('p', text)); $('mapContent').append(card); }
-  $('footerText').textContent = words('Authored demonstration for discovery. Required practical assessment and professional decisions remain with people.', '用于探索需求的预设演示。必要实操评估与专业决定仍由人负责。');
+  $('footerText').textContent = words('Amiya Shared Care · prepare, practise and stay supported.','Amiya Shared Care · 准备、练习、持续支持。');
   persist();
 }
 function renderVoice(){

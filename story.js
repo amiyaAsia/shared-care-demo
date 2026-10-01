@@ -212,6 +212,38 @@ export function roleFor(name,setting){
   if(setting==='home'&&name==='Alex')return b('Care provider manager','照护服务机构经理');
   return ROLES[name];
 }
+// Centre chain of responsibility: RN approves all care/shift changes;
+// programme coordination and centre-resource decisions stay nonclinical.
+for(const f of STORIES.centre)for(const e of f.events){
+  if(e.id==='p-seat-request'){e.approver='Priya';e.reason=b('Seating change affects the shift plan; Priya decides, Lin checks programme options.','座位调整影响班次计划；Priya 决定，Lin 核实活动选项。');}
+    if(e.id==='w-request')e.approver='Priya';
+  if(e.id==='w-approve'){e.actor='Priya';e.decision=b('Priya approves the shift-plan change; Sam takes the arrangement.','Priya 批准班次计划调整，Sam 负责安排。');}
+}
+const centreFrame=id=>STORIES.centre.find(f=>f.id===id);
+centreFrame('centre-overview').action=b('Hui Lin is a new joiner. She and Sam report to registered nurse Priya.','惠琳是新员工。她与 Sam 向注册护士 Priya 汇报。');
+centreFrame('centre-prepare').title=b('Hui Lin joins Priya’s care team','惠琳加入 Priya 的照护团队');
+centreFrame('centre-prepare').briefing=b('Priya sets the shift plan and leads care decisions. Hui Lin and Sam provide assigned daily-living assistance and report to Priya. Lin coordinates the activity programme, with no medication duties. Alex manages centre resources.','Priya 制定班次计划并负责最高层级照护决定。惠琳与 Sam 提供获分配的生活协助，并向 Priya 汇报。Lin 协调活动项目，不负责药物相关工作。Alex 管理中心资源。');
+centreFrame('centre-prepare').action=b('New joiner Hui Lin learns the residents, her assignment and the reporting route.','新员工惠琳了解服务对象、任务及汇报渠道。');
+centreFrame('centre-prepare').caption.zh='惠琳开始第一个班次。Priya 分配照护任务，Sam 是她的同事，Lin 协调活动，Alex 管理资源。药物及临床决定由 Priya 负责。';
+centreFrame('centre-w-request').speaker='Hui Lin';
+centreFrame('centre-w-request').action=b('Hui Lin reports to Priya. Lin checks programme availability.','惠琳向 Priya 汇报。Lin 核实活动场次。');
+centreFrame('centre-w-request').caption.zh='陈女士希望稍后参加安静的活动。惠琳向 Priya 汇报变化请求，Lin 核实可用场次，惠琳继续提供获分配的协助。';
+centreFrame('centre-w-decide').speaker='Priya';centreFrame('centre-w-decide').people=['Priya','Lin','Sam','Alex'];
+centreFrame('centre-w-decide').title=b('Priya approves the shift-plan change','Priya 批准班次计划调整');
+centreFrame('centre-w-decide').action=b('Lin confirms the programme slot. Alex confirms resources. Priya assigns the care task to Sam.','Lin 确认活动场次，Alex 确认资源，Priya 将照护任务分配给 Sam。');
+centreFrame('centre-w-decide').caption.zh='Lin 找到稍后的场次，Alex 确认座位资源。Priya 评估对照护的影响、批准班次计划调整，并将安排分配给 Sam。Lin 更新活动项目。';
+centreFrame('centre-w-handover').caption.zh='班次结束时，惠琳向 Priya 汇报并查看变化。Sam 的安排已完成，Priya 继续负责护理跟进。Lin 的活动更新及其余任务准备交接。';
+centreFrame('centre-p-handover').action=b('Hui Lin reports completed and outstanding work to Priya. Lin follows up activity seating.','惠琳向 Priya 汇报已完成及未完成工作。Lin 跟进活动座位。');
+centreFrame('centre-p-handover').caption.zh='练习交接时，惠琳向 Priya 汇报：舒适情况问候已完成，安静座位请求仍待决定。Priya 负责照护决定，Lin 跟进活动座位选项。';
+for(const setting of ['centre','home']){
+  const frames=STORIES[setting];
+  const end=frames.at(-1);end.action=b('Preparation, team practice and supported work share a familiar pattern.','准备、团队练习与工作支持采用熟悉的方式。');
+  const transition=frames.find(f=>f.chapter==='transition');transition.action=b('The scene changes from rehearsal to the working shift.','场景从练习切换到工作班次。');
+  transition.title=b('Hui Lin begins her working shift','惠琳开始工作班次');
+  frames.find(f=>f.chapter==='prepare').title=b('New joiner Hui Lin prepares for her assignment','新员工惠琳为任务做好准备');
+}
+centreFrame('centre-end').caption.zh='惠琳已加入团队的工作方式。她与 Sam 报告观察，Priya 指导照护并制定班次计划，Lin 协调活动。共享记忆保留上下文，方便下一位同事接手。';
+homeFrame('home-end').caption.zh='惠琳在探访期间持续与团队连接。她记录观察，Lin 协调决定及跟进，Alex 管理资源。共享记忆为下一位同事保留相关信息及未完成工作。';
 for(const frames of Object.values(STORIES))for(const f of frames){f.caption.en=NARRATION[f.id];f.narratorEnglish=true;}
 export function requiresManualAdvance(frame) { return Boolean(frame.boundary || frame.manual); }
 export const ROLES = {
