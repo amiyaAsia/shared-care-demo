@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "2346d7d3a6266fcd94b79041bebfd1b5809585c8",
+  "sourceRevision": "d3df6cc43f7c1d1055fe913c97bc82053f161261",
   "assets": [
     "app.js",
     "assets/amiya-logo.png",
@@ -35,6 +35,7 @@
     "assets/narration/home-w-update.m4a",
     "index.html",
     "memory.js",
+    "narration-script.js",
     "playback.js",
     "scene.js",
     "story.js",

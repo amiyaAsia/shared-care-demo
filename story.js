@@ -1,3 +1,4 @@
+import { NARRATION } from './narration-script.js';
 const b = (en, zh) => ({ en, zh });
 export const LABELS = {
   centre: b('Care centre', '照护中心'), home: b('Care at home', '居家照护'),
@@ -211,6 +212,7 @@ export function roleFor(name,setting){
   if(setting==='home'&&name==='Alex')return b('Care provider manager','照护服务机构经理');
   return ROLES[name];
 }
+for(const frames of Object.values(STORIES))for(const f of frames){f.caption.en=NARRATION[f.id];f.narratorEnglish=true;}
 export function requiresManualAdvance(frame) { return Boolean(frame.boundary || frame.manual); }
 export const ROLES = {
   'Hui Lin': b('Community care assistant', '社区照护助理'), Sam: b('Community care assistant', '社区照护助理'),

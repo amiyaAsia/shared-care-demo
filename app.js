@@ -130,7 +130,7 @@ function render() {
   for (const setting of ['centre','home']) { $(`${setting}Tab`).textContent = local(LABELS[setting]); $(`${setting}Tab`).setAttribute('aria-pressed', String(session.setting === setting)); }
   renderChapters();
   $('location').textContent = local(frame.location); $('sceneTitle').textContent = local(frame.title);
-  $('speaker').textContent = frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(roleFor(frame.speaker,session.setting))}`;
+  $('speaker').textContent = (frame.narratorEnglish&&session.language==='en')||frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(roleFor(frame.speaker,session.setting))}`;
   $('caption').textContent = local(frame.caption); $('physicalAction').textContent = local(frame.action);
   renderScene($('scene'), frame, session.setting, session.language);
   $('briefing').hidden = !frame.briefing; $('briefing').textContent = local(frame.briefing);
@@ -169,7 +169,7 @@ function render() {
 function renderVoice(){
   $('read').textContent=reading?words('Narration: on','旁白：开'):words('Narration: off','旁白：关');
   $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=session.language==='zh'&&!window.speechSynthesis;
-  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captioned playback continues.','音频不可用；字幕演示继续。'):session.language==='en'?words('Recorded synthetic Australian woman’s voice · Karen · measured pace','预录合成澳大利亚女性语音 · Karen · 舒缓语速'):words('Chinese narration uses your browser voice.','中文旁白使用浏览器语音。');
+  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captioned playback continues.','音频不可用；字幕演示继续。'):session.language==='en'?words('Australian woman’s neural narration · Isla · synthetic voice','澳大利亚女性神经网络旁白 · Isla · 合成语音'):words('Chinese narration uses your browser voice.','中文旁白使用浏览器语音。');
 }
 $('next').onclick = () => { stop(); choice=null;viewpoint='team';if (!$('next').disabled) { session.positions[session.setting]++;syncPlayer(); render(); } };
 $('previous').onclick = () => { stop();choice=null;viewpoint='team';if (!$('previous').disabled) { session.positions[session.setting]--;syncPlayer(); render(); } };
@@ -184,7 +184,7 @@ for (const setting of ['centre','home']) $(`${setting}Tab`).onclick = () => { st
 $('sources').onclick = () => {
   stop(); $('sourceTitle').textContent = words('Evidence and scope', '证据与范围'); $('closeSources').textContent = words('Close', '关闭');
   $('sourceBody').replaceChildren(node('p', words('The demo illustrates a proposed service. Responses, people, authorisations and records are staged. It has no backend, live AI, microphone input, real account or clinical approval. Browser progress and task state work locally.', '演示说明拟议服务。回应、人物、授权及记录均为预设。没有后端、实时 AI、麦克风输入、真实账号或临床批准。浏览器进度与任务状态在本地运行。')));
-  $('sourceBody').append(node('p',words('English audio is prerecorded synthetic speech using Karen, an Australian woman’s system voice, at a measured pace. Chinese read-aloud uses browser synthesis. Sound starts only when enabled.','英语音频为预录合成语音，使用澳大利亚女性系统声音 Karen，语速舒缓。中文朗读使用浏览器合成语音。声音仅在开启后播放。')));
+  $('sourceBody').append(node('p',words('English narration is prerecorded using Azure Speech’s Australian woman’s neural voice, Isla. It tells the authored story shown in the English captions, with sentence pauses. Chinese read-aloud uses browser synthesis. Sound starts only when enabled.','英语旁白使用 Azure Speech 澳大利亚女性神经网络声音 Isla 预先录制，以句间停顿讲述英文字幕中的预设故事。中文朗读使用浏览器合成语音。声音仅在开启后播放。')));
   for (const source of SOURCES) {
     const item = node('div', '', 'source-item'); const link = node('a', source.title); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; item.append(link, node('p', local(source.note))); $('sourceBody').append(item);
   }
