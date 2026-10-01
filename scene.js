@@ -1,4 +1,4 @@
-import { ROLES } from './story.js';
+import { roleFor } from './story.js';
 function el(tag, className, text) {
   const node = document.createElement(tag); node.className = className;
   if (text) node.textContent = text;
@@ -15,7 +15,7 @@ export function renderScene(container, frame, setting, language) {
     const person = el('div', `person ${kind}${remote ? ' remote' : ''}`);
     const avatar = el('div', 'avatar'); avatar.setAttribute('aria-hidden', 'true');
     for (const part of ['hair', 'head', 'arm left', 'arm right', 'torso', 'leg left', 'leg right']) avatar.append(el('div', part));
-    person.append(avatar, el('div', 'person-name', name === 'Hui Lin' && language === 'zh' ? '惠琳' : name), el('div', 'person-role', ROLES[name]?.[language] || name));
+    person.append(avatar, el('div', 'person-name', name === 'Hui Lin' && language === 'zh' ? '惠琳' : name), el('div', 'person-role', roleFor(name,setting)?.[language] || name));
     people.append(person);
   }
   container.append(people);

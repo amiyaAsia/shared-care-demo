@@ -175,6 +175,41 @@ for (const frames of Object.values(STORIES)) {
   if(centreHand)centreHand.action=b('Lin accepts coordination follow-through. Priya retains clinical responsibility while the doctor reply is awaited.', 'Lin 接手协调跟进。在等待医生回复期间，Priya 保留临床责任。');
   const homeHand=frames.find(f=>f.id==='home-w-handover');
   if(homeHand)homeHand.action=b('Lin accepts coordination follow-through. Grace and Priya keep their named responsibilities. Leaving does not close pending work.', 'Lin 接手协调跟进。Grace 和 Priya 保留各自职责。离开并不关闭待办事项。');
+  const transition=frames.find(f=>f.chapter==='transition');
+  transition.action=b('Training facts do not become care records. The guided story now moves into the workplace demonstration.', '练习内容不会进入照护档案。引导故事现在进入工作演示。');
+}
+// Home service has one care partner, without a separate on-site nursing/CPC role.
+for(const f of STORIES.home){
+  f.speaker=f.speaker==='Priya'?'Lin':f.speaker;
+  f.people=[...new Set(f.people.map(p=>p==='Priya'?'Lin':p))];
+  for(const prop of ['caption','action','briefing'])if(f[prop]){
+    f[prop].en=f[prop].en.replaceAll('Priya','Lin').replaceAll('nursing response','clinical follow-up coordination').replaceAll('nursing input','access to external clinical input').replaceAll('nursing question','clinical follow-up question');
+    f[prop].zh=f[prop].zh.replaceAll('Priya','Lin').replaceAll('护理回应','临床跟进协调').replaceAll('护理意见','外部临床意见');
+  }
+  for(const e of f.events){
+    if(e.actor==='Priya')e.actor='Lin';if(e.approver==='Priya')e.approver='Lin';
+    if(e.task==='review'){
+      e.clinical=false;
+      if(e.type==='plan'){e.label=b('External clinical input · follow-up','外部临床意见 · 跟进');e.source=b('Hui Lin’s report · received by care partner Lin','惠琳的报告 · 照护伙伴 Lin 已收到');}
+      if(e.type==='request')e.reason=b('Care partner coordinates external clinical input; no clinical decision made.','照护伙伴协调外部临床意见，并未作出临床决定。');
+      if(e.type==='contact'){e.externalCoordination=true;e.text=b('External clinician contacted · response awaited.','已联系外部临床专业人员 · 等待回应。');}
+    }
+  }
+}
+const homeFrame=id=>STORIES.home.find(f=>f.id===id);
+homeFrame('home-p-title').caption=b('Hui Lin is the relief worker for Mr Wong. Lin is the care partner/manager; Alex is the care provider manager. Clinical input comes from an external qualified professional.','惠琳代班探访黄先生。Lin 是照护伙伴／经理；Alex 是照护服务机构经理。临床意见来自外部合格专业人员。');
+homeFrame('home-prepare').briefing=b('Mr Wong prefers to hear who is coming before the visit. Hui Lin delivers agreed daily-living assistance. Lin coordinates care and follow-up; Alex handles provider resources. Grace sees agreed logistics only.','黄先生希望提前知道谁来探访。惠琳提供约定的生活协助。Lin 协调照护及跟进，Alex 负责机构资源。Grace 仅查看约定的安排信息。');
+homeFrame('home-w-nurse').title=b('External clinical input has a follow-up owner','外部临床意见有明确跟进负责人');
+homeFrame('home-w-nurse').caption=b('I received Hui Lin’s report and contacted the external clinician through our service route. I am coordinating the follow-up; I am not making a clinical assessment. The response is awaited.','我已收到惠琳的报告，并通过服务渠道联系外部临床专业人员。我负责协调跟进，不作临床评估。目前等待回应。');
+homeFrame('home-w-nurse').action=b('No clinician visits the home in this scene. Lin coordinates access to qualified advice; a contact request is not a received instruction.','本场景没有临床专业人员到家探访。Lin 协调获取合格专业意见；联系请求不等于已收到指示。');
+homeFrame('home-w-handover').caption=b('Assistance is confirmed. Grace owns the supplies. Lin owns follow-up with the external clinician. Keep both outstanding items visible.','生活协助已确认。Grace 负责用品，Lin 负责外部临床专业人员的跟进。保留这两项待办事项。');
+homeFrame('home-w-handover').action=b('Lin accepts coordination follow-through. Alex can arrange provider resources. Leaving the home does not close pending work.','Lin 接手协调跟进。Alex 可以安排机构资源。离开住宅并不关闭待办事项。');
+homeFrame('home-w-owner').people.push('Alex');
+homeFrame('home-w-owner').action=b('Grace accepts the permitted supply follow-up. Alex is available for provider-resource questions. No private clinical information is shared with Grace.','Grace 接受获准的用品跟进。Alex 可处理机构资源问题。不会向 Grace 分享临床隐私信息。');
+export function roleFor(name,setting){
+  if(setting==='home'&&name==='Lin')return b('Care partner / manager','照护伙伴／经理');
+  if(setting==='home'&&name==='Alex')return b('Care provider manager','照护服务机构经理');
+  return ROLES[name];
 }
 export function requiresManualAdvance(frame) { return Boolean(frame.boundary || frame.manual); }
 export const ROLES = {

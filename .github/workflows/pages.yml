@@ -25,17 +25,10 @@ jobs:
         run: |
           set -euo pipefail
           test "$ACTUAL_REPOSITORY" = "$EXPECTED_REPOSITORY"
-          node --input-type=module -e 'import {readFileSync} from "node:fs"; const expected=["index.html","styles.css","app.js","memory.js","story.js","scene.js","assets/amiya-logo.png"].sort();const names=readFileSync("SHA256SUMS","utf8").trim().split("\n").map(line=>{if(!/^[a-f0-9]{64}  [a-zA-Z0-9./-]+$/.test(line))throw Error("Invalid checksum line");return line.slice(66);}).sort();if(JSON.stringify(names)!==JSON.stringify(expected))throw Error("Checksum list must cover exactly seven files");'
-          sha256sum -c SHA256SUMS
-          mkdir -p dist/assets
-          for asset in index.html styles.css app.js memory.js story.js scene.js assets/amiya-logo.png; do
-            test -s "$asset"
-            cp "$asset" "dist/$asset"
-          done
-          for script in app.js memory.js story.js scene.js; do
+          node check-release.mjs --stage
+          for script in app.js memory.js story.js scene.js playback.js; do
             node --input-type=module --check < "$script"
           done
-          node --input-type=module -e 'import {readdirSync} from "node:fs"; const expected=["index.html","styles.css","app.js","memory.js","story.js","scene.js","assets/amiya-logo.png"].sort(); const actual=readdirSync("dist",{recursive:true,withFileTypes:true}).filter(e=>e.isFile()).map(e=>`${e.parentPath}/${e.name}`.replace(/^dist\//,"")).sort(); if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error("Unexpected public artifact");'
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
