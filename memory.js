@@ -65,6 +65,17 @@ export function applyEvent(memory, event) {
       if (!task || task.owner !== event.actor || task.status !== 'assigned') throw new Error('Assigned owner required');
       task.status = 'accepted';
       break;
+    case 'delegate-followup':
+      if(next.setting!=='home'||!task||task.clinical||task.owner!==event.actor||!['nurse','coordinator'].includes(actorRoles[event.actor])||task.status!=='planned'||actorRoles[event.assignee]!=='assistant')throw Error('Authorised nonclinical follow-up delegation required');
+      task.owner=event.assignee;task.status='assigned';task.assignedBy=event.actor;
+      delete next.reminders[event.task];
+      break;
+    case 'review-note': {
+      const note=next.notes.find(n=>n.id===event.note);
+      if(!note||note.status!=='confirmed'||next.setting!=='home'||!['nurse','coordinator'].includes(actorRoles[event.actor]))throw Error('Confirmed note and care-partner review required');
+      note.reviewedBy=event.actor;note.reviewedAt=event.at;
+      break;
+    }
     case 'report':
       if (!task || task.owner !== event.actor || !['accepted', 'planned'].includes(task.status)) throw new Error('Responsible worker required');
       next.notes.push({ id: event.id, task: event.task, person: task.person, author: event.actor, text: event.text, observedAt: event.observedAt, status: 'draft' });
@@ -85,6 +96,7 @@ export function applyEvent(memory, event) {
       next.revisions.push({ note: note.id, previous: note.text, replacement: event.text, author: event.actor, at: event.at });
       note.text = event.text;
       note.status = 'draft';
+      delete note.reviewedBy;delete note.reviewedAt;
       next.tasks[note.task].status = 'confirmation-needed';
       break;
     }

@@ -2,6 +2,7 @@ import { NARRATION } from './narration-script.js';
 import { valueStories } from './value-story.js';
 const b = (en, zh) => ({ en, zh });
 export const LABELS = {
+  followup:b('Next-visit follow-up','下次探访跟进'),
   centre: b('Care centre', '照护中心'), home: b('Care at home', '居家照护'),
   overview: b('The connected service', '相互衔接的服务'), prepare: b('Prepare for this assignment', '为本次任务做准备'),
   practice: b('Practise together', '团队练习'), rehearsal: b('Rehearsal handover', '练习交接'),

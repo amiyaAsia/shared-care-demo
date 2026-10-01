@@ -2,7 +2,9 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `9eb1d2ada5f4c7588706558763136cdd1038dca3`, directory `demo/amiya-shared-care/`.38 reviewed files:10 runtime/assets and28 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+Source revision: `amiyaAsia/CareLab` merge `9a5cdd67f9d6f76bbc8b9664d9e26373d3593e83`, directory `demo/amiya-shared-care/`.41 reviewed files:10 runtime/assets and31 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+
+Visible speech→context→draft→record capture and practice retry. Home preference follow-up is delegated by Amanda, prompted to Wei, reported as draft, confirmed and reviewed; centre worker-update and pending-response views retain their context.31scenes total.
 
 Focused centre/home stories now demonstrate buffered care requests, source-linked recall, responsibility-following reminders, confirmed-record reuse and practice feedback. The home story follows a permitted routine change into the next worker's visit. Narration control sits beside Narrator below the scene.
 
