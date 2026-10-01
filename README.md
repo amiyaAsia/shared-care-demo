@@ -2,7 +2,9 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `9a5cdd67f9d6f76bbc8b9664d9e26373d3593e83`, directory `demo/amiya-shared-care/`.41 reviewed files:10 runtime/assets and31 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+Source revision: `amiyaAsia/CareLab` merge `bb3961d6d7a9427700b00199ff4ab558ed9ed2ac`, directory `demo/amiya-shared-care/`.42 reviewed files:11 runtime/assets and31 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+
+Open-ear headset illustrations and paired phone view follow the same scripted memory: pending request, current owner, reminder, draft or confirmed note. Phone sits inside scene on desktop and stacks below characters on mobile; no additional clicks or narration changes.
 
 Visible speech→context→draft→record capture and practice retry. Home preference follow-up is delegated by Amanda, prompted to Wei, reported as draft, confirmed and reviewed; centre worker-update and pending-response views retain their context.31scenes total.
 
