@@ -173,7 +173,7 @@ function render() {
   $('location').textContent = local(frame.location); $('sceneTitle').textContent = local(frame.title);
   $('speaker').textContent = (frame.narratorEnglish&&session.language==='en')||frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(roleFor(frame.speaker,session.setting))}`;
   $('caption').textContent = local(frame.caption); $('physicalAction').textContent = local(frame.action);
-  renderScene($('scene'), frame, session.setting, session.language);
+  renderScene($('scene'), frame, session.setting, session.language,frame.memory?replay(STORIES[session.setting],session.positions[session.setting],session.setting)[frame.memory]:null);
   $('briefing').hidden = !frame.briefing; $('briefing').textContent = local(frame.briefing);
   renderSupport(frame);
   $('transitionCard').hidden = !frame.boundary;
