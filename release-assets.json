@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "c63b4fb08a3e6e450d0d99687093f30050a19059",
+  "sourceRevision": "681ce33db06691d52b6517dcf5b7d5ea86b4685f",
   "assets": [
     "app.js",
     "assets/amiya-logo.png",
@@ -9,7 +9,6 @@
     "assets/narration/centre-p-approve.m4a",
     "assets/narration/centre-p-confirm.m4a",
     "assets/narration/centre-p-draft.m4a",
-    "assets/narration/centre-p-handover.m4a",
     "assets/narration/centre-p-request.m4a",
     "assets/narration/centre-practice-title.m4a",
     "assets/narration/centre-prepare.m4a",
@@ -23,7 +22,6 @@
     "assets/narration/home-overview.m4a",
     "assets/narration/home-p-approve.m4a",
     "assets/narration/home-p-complete.m4a",
-    "assets/narration/home-p-handover.m4a",
     "assets/narration/home-p-request.m4a",
     "assets/narration/home-p-title.m4a",
     "assets/narration/home-prepare.m4a",
@@ -39,6 +37,7 @@
     "playback.js",
     "scene.js",
     "story.js",
-    "styles.css"
+    "styles.css",
+    "value-story.js"
   ]
 }

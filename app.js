@@ -1,6 +1,6 @@
 import { STORIES, LABELS, ROLES, SOURCES, roleFor } from './story.js';
 import { GuidedPlayer, readingDuration } from './playback.js';
-import { emptySession, loadSession, saveSession, resetSession, replay } from './memory.js';
+import { emptySession, loadSession, saveSession, resetSession, replay,recall } from './memory.js';
 import { renderScene } from './scene.js';
 const $ = id => document.getElementById(id);
 let storage;
@@ -118,6 +118,35 @@ function renderChapters() {
     $('chapters').append(button);
   }
 }
+function renderSupport(frame){
+ const panel=$('supportMoment');panel.replaceChildren();panel.hidden=!frame.support;
+ if(!frame.support)return;
+ const s=frame.support,memory=frame.memory?replay(STORIES[session.setting],session.positions[session.setting],session.setting)[frame.memory]:null;
+ panel.append(node('p',words('Amiya at this moment','此刻的 Amiya 支持'),'eyebrow'));
+ if(s.question)panel.append(node('p',local(s.question),'support-question'));
+ if(s.answer)panel.append(node('p',local(s.answer),'support-answer'));
+ let source=s.source;
+ if(s.kind==='recall'){
+  const result=recall(memory,s.person,s.task);
+  if(result){panel.append(node('p',`${result.task.person} · ${local(result.task.label)} · ${result.task.owner}`));
+   for(const r of result.requests)panel.append(node('p',`${r.approver} · ${r.status==='pending'?words('response pending','等待回应'):local(r.decision)}`));
+   for(const n of result.notes)panel.append(node('p',`${local(n.text)} (${n.id} · ${n.author} · ${n.observedAt})`,'record-reuse'));
+   source=result.source;
+  }
+ }
+ if(s.kind==='reminder'){
+  const reminder=memory.reminders[s.task];panel.append(node('p',reminder?`${words('Task prompt','任务提醒')} → ${reminder.owner}`:words('No active prompt','无活动提醒')));
+  panel.append(node('p',`${words('Current responsible person','当前负责人')}: ${memory.tasks[s.task].owner}`));
+ }
+ if(s.kind==='capture'||s.kind==='reuse'){
+  if(s.utterance)panel.append(node('p',`“${local(s.utterance)}”`,'support-question'));
+  const note=memory.notes.find(n=>n.id===s.note);
+  if(note?.status==='confirmed')panel.append(node('p',`${local(note.text)} · ${note.id} · ${note.author} · ${note.observedAt}`, 'record-reuse'),node('p',words('Confirmed record reused in this view','本视图复用已确认记录')));
+  else if(note)panel.append(node('p',words('Record awaits confirmation','记录等待确认')));
+  if(s.task&&memory.tasks[s.task])panel.append(node('p',`${local(memory.tasks[s.task].label)} · ${memory.tasks[s.task].owner}`));
+ }
+ if(source){const details=document.createElement('details');details.className='source-detail';details.append(node('summary',`${words('Approved source','批准来源')}: ${local(source.title)} · v${source.version}`),node('p',local(source.text)),node('p',`${source.author} · ${source.date||words('assignment briefing','任务简报')} · ${source.at||''}`));panel.append(details);}
+}
 function render() {
   const frame = current();
   document.documentElement.lang = session.language === 'zh' ? 'zh-CN' : 'en';
@@ -134,6 +163,7 @@ function render() {
   $('caption').textContent = local(frame.caption); $('physicalAction').textContent = local(frame.action);
   renderScene($('scene'), frame, session.setting, session.language);
   $('briefing').hidden = !frame.briefing; $('briefing').textContent = local(frame.briefing);
+  renderSupport(frame);
   $('transitionCard').hidden = !frame.boundary;
   const handover=['rehearsal','handover'].includes(frame.chapter);
   $('transitionTitle').textContent = handover?local(LABELS[frame.chapter]):words('Practice and workplace support use separate records.', '练习与工作支持使用独立记录。');
@@ -143,7 +173,7 @@ function render() {
   $('inspectPending').textContent=words('Inspect pending work','查看待办事项');$('contactHuman').textContent=words('Contact the responsible person','联系负责人');
   $('choiceFeedback').textContent=choice==='inspect'?words('The request is retained, with a named decision owner. It is still unapproved.','请求已保留，并有明确决策负责人。尚未获批。'):choice==='contact'?words('Direct team contact is requested. A live service would connect you through its established human-help route; this demo stages that request.','已请求直接联系团队。实际服务将通过既定人类求助渠道连接；本演示为预设请求。'):'';
   $('viewControls').replaceChildren();
-  if(session.setting==='home'&&frame.memory==='workplace')for(const view of ['team','Grace']){const button=node('button',view==='team'?words('Care-team view','照护团队视角'):words('Grace’s permitted view','Grace 获准视角'));button.dataset.view=view;button.setAttribute('aria-pressed',String(viewpoint===view));button.onclick=()=>{stop();viewpoint=view;render();document.querySelector(`[data-view="${view}"]`).focus();};$('viewControls').append(button);}
+  // This focused scenario uses provider-team views only; no family-data branch.
   $('memoryTitle').textContent = words('Shared memory', '共享记忆'); renderMemory(frame);
   $('position').textContent = `${session.positions[session.setting] + 1} / ${lengths[session.setting]}`;
   $('progress').value = (session.positions[session.setting] + 1) / lengths[session.setting] * 100;
