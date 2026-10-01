@@ -26,7 +26,7 @@ jobs:
           set -euo pipefail
           test "$ACTUAL_REPOSITORY" = "$EXPECTED_REPOSITORY"
           node check-release.mjs --stage
-          for script in app.js memory.js story.js scene.js playback.js; do
+          for script in app.js memory.js story.js scene.js playback.js narration-script.js; do
             node --input-type=module --check < "$script"
           done
       - uses: actions/upload-pages-artifact@v3
