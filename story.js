@@ -1,4 +1,5 @@
 import { NARRATION } from './narration-script.js';
+import { valueStories } from './value-story.js';
 const b = (en, zh) => ({ en, zh });
 export const LABELS = {
   centre: b('Care centre', '照护中心'), home: b('Care at home', '居家照护'),
@@ -245,6 +246,7 @@ for(const setting of ['centre','home']){
 centreFrame('centre-end').caption.zh='惠琳已加入团队的工作方式。她与 Sam 报告观察，Priya 指导照护并制定班次计划，Lin 协调活动。共享记忆保留上下文，方便下一位同事接手。';
 homeFrame('home-end').caption.zh='惠琳在探访期间持续与团队连接。她记录观察，Lin 协调决定及跟进，Alex 管理资源。共享记忆为下一位同事保留相关信息及未完成工作。';
 for(const frames of Object.values(STORIES))for(const f of frames){f.caption.en=NARRATION[f.id];f.narratorEnglish=true;}
+Object.assign(STORIES,valueStories());
 export function requiresManualAdvance(frame) { return Boolean(frame.boundary || frame.manual); }
 export const ROLES = {
   'Hui Lin': b('Community care assistant', '社区照护助理'), Sam: b('Community care assistant', '社区照护助理'),
