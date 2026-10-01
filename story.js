@@ -209,6 +209,9 @@ homeFrame('home-w-handover').action=b('Lin accepts coordination follow-through. 
 homeFrame('home-w-owner').people.push('Alex');
 homeFrame('home-w-owner').action=b('Grace accepts the permitted supply follow-up. Alex is available for provider-resource questions. No private clinical information is shared with Grace.','Grace 接受获准的用品跟进。Alex 可处理机构资源问题。不会向 Grace 分享临床隐私信息。');
 export function roleFor(name,setting){
+  if(setting==='home'&&name==='Sara')return b('Home-care worker · new joiner','居家照护员工 · 新员工');
+  if(setting==='home'&&name==='Wei')return b('Home-care worker · experienced peer','居家照护员工 · 有经验同事');
+  if(setting==='home'&&name==='Amanda')return b('Care partner / manager · registered nurse','照护伙伴／经理 · 注册护士');
   if(setting==='home'&&name==='Lin')return b('Care partner / manager','照护伙伴／经理');
   if(setting==='home'&&name==='Alex')return b('Care provider manager','照护服务机构经理');
   return ROLES[name];
@@ -249,6 +252,7 @@ for(const frames of Object.values(STORIES))for(const f of frames){f.caption.en=N
 Object.assign(STORIES,valueStories());
 export function requiresManualAdvance(frame) { return Boolean(frame.boundary || frame.manual); }
 export const ROLES = {
+  Sara:b('Home-care worker · new joiner','居家照护员工 · 新员工'),Wei:b('Home-care worker · experienced peer','居家照护员工 · 有经验同事'),Amanda:b('Care partner / manager · registered nurse','照护伙伴／经理 · 注册护士'),
   'Hui Lin': b('Community care assistant', '社区照护助理'), Sam: b('Community care assistant', '社区照护助理'),
   Priya: b('Registered nurse', '注册护士'), Lin: b('Care programme coordinator', '照护活动协调员'),
   Alex: b('Centre / service manager', '中心／服务经理'), Grace: b('Chosen family supporter', '获准的家属支持者'),

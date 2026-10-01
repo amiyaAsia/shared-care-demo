@@ -138,5 +138,23 @@ export function valueStories(){
    for(const e of f.events){const t=ticks[f.memory]++;e.at=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;e.date=setting==='home'&&e.id.startsWith('hw-next')||e.id==='hw-receipt'?'Demo day 2':'Demo day 1';if(e.type==='report')e.observedAt=e.at;}
   }
  }
- return{centre,home};
+ // Home provider's local model: Amanda is an RN-qualified care partner;
+ // Sara and Wei deliver agreed daily-living assistance as peer workers.
+ const homeName=name=>({'Hui Lin':'Sara',Lin:'Amanda',Sam:'Wei'})[name]||name;
+ const replace=value=>{
+  if(typeof value==='string')return value.replaceAll('Hui Lin','Sara').replaceAll('Sam','Wei').replace(/\bLin\b/g,'Amanda').replaceAll('惠琳','Sara');
+  if(Array.isArray(value))return value.map(replace);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,replace(v)]));
+  return value;
+ };
+ const homeFrames=home.map(replace);
+ for(const f of homeFrames){
+  f.people=f.people.map(homeName); // Names are already replaced; preserves Alex/Mr Wong.
+ }
+ homeFrames.find(f=>f.id==='home-overview').caption=b('Sara is a new home-care worker. Her experienced peer, Wei, helps her learn this assignment. Amanda is the registered-nurse-qualified care partner coordinating Mr Wong’s care. A change during Sara’s visit must reach Amanda and the next worker.','Sara 是新入职的居家照护员工。有经验的同事 Wei 协助她熟悉任务。Amanda 是具备注册护士资格的照护伙伴，协调黄先生的照护。探访中的变化需传给 Amanda 及下一位员工。');
+ homeFrames.find(f=>f.id==='home-prepare').caption=b('Sara learns Mr Wong’s preferences and her assigned daily-living assistance. Wei helps her find the current plan. Amanda explains the agreed service options and the route for nursing questions. Alex manages provider resources. Sara knows whom to ask before changing the arrangement.','Sara 了解黄先生偏好及获分配的生活协助。Wei 帮她查找当前计划，Amanda 解释约定服务选项及护理问题渠道。Alex 管理机构资源。Sara 明确调整前向谁求助。');
+ homeFrames.find(f=>f.id==='home-prepare').people=['Sara','Wei','Amanda','Mr Wong'];
+ homeFrames.find(f=>f.id==='home-p-title').caption=b('In rehearsal, Sara reports a preferred change but leaves out the service plan. Wei helps her identify what is missing: the agreed tasks and Mr Wong’s preference. Sara retries with a complete request, ready for Amanda to review.','练习中 Sara 报告偏好变化却未关联服务计划。Wei 帮她发现缺少约定任务及黄先生偏好。Sara 重试完整请求，交给 Amanda 核对。');
+ homeFrames.find(f=>f.id==='home-p-title').people=['Sara','Wei','Amanda'];
+ return{centre,home:homeFrames};
 }
