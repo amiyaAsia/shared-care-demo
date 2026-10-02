@@ -43,18 +43,17 @@ export function renderScene(container, frame, setting, language, memory=null) {
   if(view){
     container.classList.add('with-phone');
     const phone=el('aside','scene-phone');phone.setAttribute('aria-label',language==='zh'?'配对手机界面示意':'Paired phone interface illustration');phone.dataset.phase=view.phase;
-    phone.append(el('div','phone-speaker'),el('p','phone-context',language==='zh'?'配对手机 · 跟随演示':'Paired phone · follows the story'),el('strong','phone-owner',view.owner),el('p','phone-mode',view.mode==='practice'?(language==='zh'?'练习记忆':'Practice memory'):view.mode==='workplace'?(language==='zh'?'工作记忆':'Workplace memory'):(language==='zh'?'任务准备':'Assignment preparation')));
+     phone.append(el('strong','phone-owner',view.owner));
     phone.append(el('h3','phone-heading',view.title[language==='zh'?1:0]));
     const states={pending:['Awaiting human decision','等待人类决定'],decided:['Decision recorded','决定已记录'],practice:['Practice feedback','练习反馈'],reminder:['Reminder active','提醒中'],'no-reminder':['No active reminder','无活动提醒'],draft:['Draft · check required','草稿 · 待核对'],confirmed:['Confirmed','已确认'],context:['Current context','当前上下文'],unavailable:['Record unavailable','记录不可用']};
     phone.append(el('p','phone-state',states[view.phase][language==='zh'?1:0]));
     const text=typeof view.text==='string'?view.text:view.text?.[language];if(text)phone.append(el('p','phone-text',text));
     if(view.target)phone.append(el('p','phone-target',`${language==='zh'?'回应负责人':'Response owner'}: ${view.target}`));
-    if(view.source)phone.append(el('p','phone-reference',view.source));
-    if(view.recordId)phone.append(el('p','phone-reference',`${language==='zh'?'记录':'Record'}: ${view.recordId}`));
-    if(view.reviewedBy)phone.append(el('p','phone-reference',`${language==='zh'?'复核':'Reviewed'}: ${view.reviewedBy}`));
+     if(view.source)phone.append(el('p','phone-reference',view.source));
+     if(view.recordId)phone.append(el('p','phone-reference',`${language==='zh'?'记录':'Record'}: ${view.recordId}`));
+    if(view.reviewedBy)phone.append(el('p','phone-reviewer',`${language==='zh'?'复核':'Reviewed'}: ${view.reviewedBy}`));
     if(view.related){const r=view.related;phone.append(el('p','phone-related',`${r.label[language]} · ${r.owner}`),el('p','phone-reference',r.reminder?(language==='zh'?'待完成 · 提醒中':'Outstanding · reminder active'):r.status),el('p','phone-reference',r.source||''));}
     if(view.extraRecord)phone.append(el('p','phone-related',`${language==='zh'?'已确认护理记录':'Confirmed nursing record'} · ${view.extraRecord.author}`),el('p','phone-reference',view.extraRecord.id));
-    phone.append(el('p','phone-handsfree',language==='zh'?'通过耳机说话和收听':'Speak and listen through the headset'));
     container.append(phone);
     for(const person of container.querySelectorAll('.person')){
       if(person.querySelector('.person-name')?.textContent===(view.owner==='Hui Lin'&&language==='zh'?'惠琳':view.owner)&&['capture','request','recall'].includes(frame.support.kind))person.classList.add('voice-active');
