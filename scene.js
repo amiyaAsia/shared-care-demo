@@ -52,6 +52,8 @@ export function renderScene(container, frame, setting, language, memory=null) {
     if(view.source)phone.append(el('p','phone-reference',view.source));
     if(view.recordId)phone.append(el('p','phone-reference',`${language==='zh'?'记录':'Record'}: ${view.recordId}`));
     if(view.reviewedBy)phone.append(el('p','phone-reference',`${language==='zh'?'复核':'Reviewed'}: ${view.reviewedBy}`));
+    if(view.related){const r=view.related;phone.append(el('p','phone-related',`${r.label[language]} · ${r.owner}`),el('p','phone-reference',r.reminder?(language==='zh'?'待完成 · 提醒中':'Outstanding · reminder active'):r.status),el('p','phone-reference',r.source||''));}
+    if(view.extraRecord)phone.append(el('p','phone-related',`${language==='zh'?'已确认护理记录':'Confirmed nursing record'} · ${view.extraRecord.author}`),el('p','phone-reference',view.extraRecord.id));
     phone.append(el('p','phone-handsfree',language==='zh'?'通过耳机说话和收听':'Speak and listen through the headset'));
     container.append(phone);
     for(const person of container.querySelectorAll('.person')){

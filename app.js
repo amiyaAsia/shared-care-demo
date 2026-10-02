@@ -85,11 +85,12 @@ function renderMemory(frame) {
     if(viewpoint==='Grace' && (task.owner!=='Grace' || task.id!=='supplies'))continue;
     const card = node('div', '', `task-card${task.status !== 'completed' ? ' pending' : ''}`); card.dataset.task = task.id; card.dataset.status = task.status;
     const external=Boolean(memory.contacts[task.id]&&session.setting==='home');
-    card.append(node('h4', `${task.person} · ${local(task.label)}`), node('span', external?words('Awaiting external clinical response','等待外部临床回应'):words(...statusLabels[task.status]), 'task-state'),
+    card.append(node('h4', `${task.person} · ${local(task.label)}`), node('span', task.clinical&&memory.reminders[task.id]?words('Outstanding · RN reminder active','待完成 · 注册护士提醒中'):external?words('Awaiting external clinical response','等待外部临床回应'):words(...statusLabels[task.status]), 'task-state'),
       node('p', `${words('Responsible', '负责人')}: ${task.owner} · ${local(roleFor(task.owner,session.setting))}`), node('p', `${words('Source', '来源')}: ${local(task.source)}`, 'source-line'));
     const request = Object.values(memory.requests).find(r => r.task === task.id);
     if (request && viewpoint!=='Grace') card.append(node('p', `${external?words('Follow-up owner','跟进负责人'):words('Decision', '决定')}: ${request.approver} · ${request.status === 'pending' ? words('pending', '待处理') : request.status==='declined'?words('declined','未批准'):words('approved', '已批准')}`), node('p', local(request.decision || request.reason), 'source-line'));
     const contact=memory.contacts[task.id];
+    if(task.clinical)card.append(node('p',words('Registered nurse performs this task. Assistants report observations. If prescribed timing cannot be met, seek a human decision; no automatic extension.','由注册护士执行，助理报告观察。无法满足规定时间时需人类决定，不自动延后。'),'source-line'));
     if(contact && viewpoint!=='Grace')card.append(node('p',local(contact.text)),node('p',contact.status==='awaiting-reply'?words('Doctor reply not yet received.','尚未收到医生回复。'):words('Doctor response received for nurse review.','医生回应已收到，交由护士核对。'),'source-line'));
     const note = memory.notes.find(n => n.id === task.note);
     if (note) {
@@ -125,7 +126,9 @@ function renderSupport(frame){
   panel.append(node('p',words('Amiya at this moment','此刻的 Amiya 支持'),'eyebrow'));
   if(s.waitingFor){const waiting=node('div','', 'waiting-context');waiting.append(node('strong',`${s.waitingFor} · ${words('currently occupied','当前在忙')}`),node('p',words('Request, explanation and task stay together while the human decision is pending.','人类决定待定时，请求、说明及任务共同保留。')));panel.append(waiting);}
  if(s.question)panel.append(node('p',local(s.question),'support-question'));
- if(s.answer)panel.append(node('p',local(s.answer),'support-answer'));
+  if(s.answer)panel.append(node('p',local(s.answer),'support-answer'));
+  if(s.relatedTask&&memory?.tasks[s.relatedTask]){const task=memory.tasks[s.relatedTask];panel.append(node('p',`${local(task.label)} · ${task.owner} · ${words('remains separately assigned','保持独立分配')}`,'team-update'));}
+  if(s.extraNote){const note=memory?.notes.find(n=>n.id===s.extraNote&&n.status==='confirmed');if(note)panel.append(node('p',`${local(note.text)} · ${note.author} · ${note.id}`,'record-reuse'));}
  let source=s.source;
  if(s.kind==='recall'){
   const result=recall(memory,s.person,s.task);

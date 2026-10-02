@@ -2,7 +2,9 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `bb3961d6d7a9427700b00199ff4ab558ed9ed2ac`, directory `demo/amiya-shared-care/`.42 reviewed files:11 runtime/assets and31 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+Source revision: `amiyaAsia/CareLab` merge `c33c7d6584ba1a3418118765b204757589610b70`, directory `demo/amiya-shared-care/`.43 reviewed files:11 runtime/assets and32 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+
+Centre case: additional monitoring after a doctor-reviewed change remains assigned to registered nurse Priya, separately from assistant cover tasks. Phone and shared memory show outstanding monitoring, nurse draft and confirmed record. No medication dose, threshold or monitoring interval. Home journey unchanged.
 
 Open-ear headset illustrations and paired phone view follow the same scripted memory: pending request, current owner, reminder, draft or confirmed note. Phone sits inside scene on desktop and stacks below characters on mobile; no additional clicks or narration changes.
 
