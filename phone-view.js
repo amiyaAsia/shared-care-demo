@@ -10,6 +10,11 @@ export function phoneView(frame, memory, setting) {
   const source=task?.sourceId?memory.sources[task.sourceId]?.at(-1):support.source;
   const title={knowledge:['Approved guidance','批准指南'],feedback:['Practice feedback','练习反馈'],request:['Team request','团队请求'],recall:['Shared memory','共享记忆'],reminder:['Task reminder','任务提醒'],capture:['Voice note','语音笔记'],reuse:['Reviewed record','已核对记录']}[support.kind]||['Shared memory','共享记忆'];
   const view={title,owner:worker,mode:frame.memory||'prepare',phase:'context',text:support.answer||support.question,source:source?`${source.id} · v${source.version}`:null};
+  if(support.relatedTask&&memory?.tasks[support.relatedTask]){
+    const related=memory.tasks[support.relatedTask],approved=memory.sources[related.sourceId]?.at(-1);
+    view.related={owner:related.owner,label:related.label,status:related.status,reminder:Boolean(memory.reminders[related.id]),source:approved?`${approved.id} · v${approved.version}`:null};
+  }
+  if(support.extraNote){const extra=memory?.notes.find(n=>n.id===support.extraNote&&n.status==='confirmed');if(extra)view.extraRecord={id:extra.id,author:extra.author,text:extra.text};}
   if(support.kind==='request'&&request){view.owner=request.sender;view.phase=request.status==='pending'?'pending':'decided';view.text=request.reason;view.target=request.approver;}
   if(support.kind==='feedback'){view.phase='practice';view.text=support.answer;}
   if(support.kind==='reminder'&&task){view.owner=task.owner;view.phase=memory.reminders[task.id]?'reminder':'no-reminder';view.text=task.label;}

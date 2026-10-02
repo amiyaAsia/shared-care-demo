@@ -188,5 +188,40 @@ export function valueStories(){
  // Re-time only the home narrative after inserting new review events/scenes.
  const homeTicks={practice:9*60+20,workplace:14*60};
  for(const f of homeFrames)for(const e of f.events){const t=homeTicks[f.memory]++;e.at=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;e.date=['followup','handover'].includes(f.chapter)?'Demo day 2':'Demo day 1';if(e.type==='report')e.observedAt=e.at;}
+ const centreFrame=id=>centre.find(f=>f.id===id);
+ const monitoringSource={id:'monitoring-plan',version:1,person:'Mrs Chen',author:'Priya',title:b('Doctor’s monitoring instruction · checked by Priya','医生监测指示 · Priya 已核对'),text:b('Following the doctor’s medication review, additional monitoring is required. Priya performs the prescribed monitoring. Assistants report observations to Priya and do not complete this registered-nurse task.','医生药物复核后需要额外监测。Priya 执行规定监测，助理向 Priya 报告观察，不执行这项注册护士任务。')};
+ const monitoringEvents=prefix=>[
+  event(`${prefix}-monitor-source`,'source',{actor:'Priya',source:monitoringSource}),
+  event(`${prefix}-monitor-plan`,'plan',{task:'monitoring',person:'Mrs Chen',actor:'Priya',clinical:true,label:b('Prescribed additional monitoring · RN','规定的额外监测 · 注册护士'),source:monitoringSource.title,sourceId:'monitoring-plan'}),
+  event(`${prefix}-monitor-reminder`,'remind',{task:'monitoring',actor:'Priya'})
+ ];
+ centreFrame('centre-overview').title=b('A changed care requirement must reach the floor','变化的照护要求必须落实');
+ centreFrame('centre-overview').caption=b('After the doctor’s medication review, Mrs Chen needs additional monitoring. Priya, the registered nurse, adds it to the shift plan. New joiner Hui Lin and her peer Sam are already assisting residents. The team needs to keep the changed requirement visible while everyday care continues.','医生药物复核后，陈女士需要额外监测。注册护士 Priya 将其加入班次计划。新员工惠琳与同事 Sam 已在协助服务对象。团队需要在日常照护中持续掌握变化的要求。');
+ centreFrame('centre-prepare').caption=b('Hui Lin checks what the change means for her assignment. Amiya retrieves Priya’s reviewed instructions: assistants report observations and carry out their agreed assistance; Priya performs the nursing monitoring. Hui Lin knows whom to contact and which responsibility stays with the nurse.','惠琳核实变化对任务的影响。Amiya 调出 Priya 核对的指示：助理报告观察并执行约定协助；护理监测由 Priya 完成。惠琳明确求助对象及护士保留的职责。');
+ centreFrame('centre-prepare').support={kind:'knowledge',question:b('What does this changed requirement mean for my work?','这项新要求对我的工作意味着什么？'),answer:b('Report observations to Priya. Continue assigned assistance. Priya owns the prescribed nursing monitoring.','向 Priya 报告观察，继续获分配协助。规定护理监测由 Priya 负责。'),source:monitoringSource};
+ centreFrame('centre-practice-title').events.unshift(...monitoringEvents('p'));
+ centreFrame('centre-practice-title').action=b('AI-simulated resident and teammates · practice memory','AI 模拟服务对象与同事 · 练习记忆');
+ centreFrame('centre-w-request').events.unshift(...monitoringEvents('w'));
+ centreFrame('centre-w-request').caption=b('During the working shift, Priya’s monitoring reminder remains active. Hui Lin is helping Mr Lee when Mrs Chen’s comfort check also needs attention. She reports the conflict once. Amiya keeps the assistant’s request and the separate nursing requirement visible, with an owner for each.','工作班次中，Priya 的监测提醒保持活动。惠琳正在帮助李先生，陈女士的舒适问候也需处理。她一次报告冲突。Amiya 分别保留助理请求与护理要求，并明确各自负责人。');
+ centreFrame('centre-w-decide').caption=b('Priya asks what needs her attention. Amiya shows the doctor-reviewed monitoring requirement beside Hui Lin’s request. Sam has confirmed he can help with the comfort check. Priya can arrange cover for that task while keeping the nursing monitoring under her own responsibility.','Priya 询问需要关注什么。Amiya 在惠琳请求旁展示经核对的医生监测要求。Sam 已确认能接替舒适问候。Priya 安排这项任务接替，同时保留自身护理监测责任。');
+ centreFrame('centre-w-decide').support.relatedTask='monitoring';
+ centreFrame('centre-w-request').support.relatedTask='monitoring';
+ centreFrame('centre-p-draft').action=b('Only the comfort check moves to Sam. Prescribed monitoring stays with Priya.','仅舒适问候交给 Sam，规定监测仍由 Priya 负责。');
+ centreFrame('centre-w-record').action=b('Sam’s note closes his check; Priya’s monitoring and the seating request remain open.','Sam 的记录完成其问候；Priya 的监测及座位请求仍待处理。');
+ const monitorDraft=scene('centre-monitoring-draft','workplace','workplace','Priya performs the prescribed monitoring',
+  'Priya carries out the monitoring in the doctor-reviewed instruction. She captures her nursing entry and checks the draft. Sam’s completed assistance has not closed this task. The monitoring stays open until Priya confirms her own record.',
+  'Priya 执行已核对的医生指示中的监测，并记录护理内容、核对草稿。Sam 完成协助并未关闭此任务。监测在 Priya 确认自己的记录前保持未完成。',['Priya','Mrs Chen'],
+  [event('w-monitor-report','report',{task:'monitoring',actor:'Priya',text:b('Prescribed monitoring performed. Nursing entry ready for Priya’s confirmation.','规定监测已执行，护理记录等待 Priya 确认。')})],{kind:'capture',utterance:b('Prescribed monitoring performed. Please prepare my nursing entry for review.','规定监测已执行，请准备我的护理记录以供核对。'),note:'w-monitor-report',flow:true});
+ monitorDraft.title.zh='Priya 执行规定监测';monitorDraft.location=b('Care centre · working shift','照护中心 · 工作班次');
+ centre.splice(centre.findIndex(f=>f.id==='centre-w-doctor'),0,monitorDraft);
+ const confirmed=centreFrame('centre-w-doctor');
+ confirmed.title=b('Priya confirms the nursing record','Priya 确认护理记录');confirmed.people=['Priya','Mrs Chen'];
+ confirmed.caption=b('Priya confirms the nursing entry. The monitoring task is completed and its reminder clears. The team can see that both the assistant’s check and the nurse’s monitoring were performed. Mrs Chen’s seating request stays open for Priya to coordinate with Lin.','Priya 确认护理记录。监测任务完成，提醒停止。团队可见助理问候及护士监测均已执行。陈女士座位请求仍保留，由 Priya 与 Lin 协调。');
+ confirmed.action=b('Only Priya’s confirmation closes the registered-nurse task.','仅 Priya 的确认可完成注册护士任务。');
+ confirmed.events=[event('w-monitor-confirm','confirm',{task:'monitoring',actor:'Priya'})];confirmed.support={kind:'reuse',note:'w-monitor-report',task:'monitoring'};
+ centreFrame('centre-w-handover').caption=b('At handover, Hui Lin asks what changed and what remains open. Amiya retrieves Sam’s observation and Priya’s confirmed nursing record. The seating request is still pending with Priya. The next shift receives each task’s actual state, without reconstructing the accounts.','交接时，惠琳询问变化及待办。Amiya 调出 Sam 观察及 Priya 确认的护理记录。座位请求仍由 Priya 处理。下一班次获取各任务实际状态，无需重建说明。');
+ centreFrame('centre-w-handover').support.extraNote='w-monitor-report';
+ centreFrame('centre-end').caption=b('The changed monitoring requirement stayed with Priya until she completed it. Hui Lin continued helping Mr Lee, and Sam covered the assistant task. Their reviewed records now carry into handover, with the remaining request still assigned to a person.','变化的监测要求由 Priya 保持负责直至完成。惠琳继续帮助李先生，Sam 接替助理任务。核对记录进入交接，剩余请求仍有明确负责人。');
+ const centreTicks={practice:9*60+20,workplace:14*60};for(const f of centre)for(const e of f.events){const t=centreTicks[f.memory]++;e.at=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;e.date='Demo day 1';if(e.type==='report')e.observedAt=e.at;}
  return{centre,home:homeFrames};
 }
