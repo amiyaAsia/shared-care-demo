@@ -6,7 +6,10 @@ const $ = id => document.getElementById(id);
 let storage;
 try { storage = window.localStorage; } catch { storage = null; }
 const lengths = Object.fromEntries(Object.entries(STORIES).map(([key, frames]) => [key, frames.length]));
-let session = storage ? loadSession(storage, lengths) : emptySession();
+const saved = storage ? loadSession(storage, lengths) : emptySession();
+// Every opening/reload starts the presentation at the centre introduction.
+// Retain language preference, but never resume a previous viewer's scene.
+let session = { ...emptySession(), language: saved.language };
 let playing = false, timer = null, reading = false, generation=0, viewpoint='team', choice=null;
 let player=new GuidedPlayer(STORIES[session.setting],session.positions[session.setting],session.language);
 const narration=new Audio();narration.preload='none';let audioFailed=false;
