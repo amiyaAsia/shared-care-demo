@@ -2,7 +2,9 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `c33c7d6584ba1a3418118765b204757589610b70`, directory `demo/amiya-shared-care/`.43 reviewed files:11 runtime/assets and32 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+Source revision: `amiyaAsia/CareLab` merge `3739e33c2ba26403f1b5922c037076c4a20a00fc`, directory `demo/amiya-shared-care/`.43 reviewed files:11 runtime/assets and32 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+
+Every opening/reload starts Care centre at the first scene. Saved language is retained; previous story positions are not resumed. In-page chapter and setting navigation remain available.
 
 Centre case: additional monitoring after a doctor-reviewed change remains assigned to registered nurse Priya, separately from assistant cover tasks. Phone and shared memory show outstanding monitoring, nurse draft and confirmed record. No medication dose, threshold or monitoring interval. Home journey unchanged.
 
