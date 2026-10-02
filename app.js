@@ -1,5 +1,5 @@
 import { STORIES, LABELS, ROLES, SOURCES, roleFor } from './story.js';
-import { GuidedPlayer, readingDuration } from './playback.js';
+import { GuidedPlayer, readingDuration, journeyIndexes, presentationFrame } from './playback.js';
 import { emptySession, loadSession, saveSession, resetSession, replay,recall } from './memory.js';
 import { renderScene } from './scene.js';
 const $ = id => document.getElementById(id);
@@ -11,7 +11,11 @@ const saved = storage ? loadSession(storage, lengths) : emptySession();
 // Retain language preference, but never resume a previous viewer's scene.
 let session = { ...emptySession(), language: saved.language };
 let playing = false, timer = null, reading = false, generation=0, viewpoint='team', choice=null;
-let player=new GuidedPlayer(STORIES[session.setting],session.positions[session.setting],session.language);
+let route='support';
+const routePositions=()=>journeyIndexes(STORIES[session.setting],session.setting,route);
+const routeOffset=()=>routePositions().indexOf(session.positions[session.setting]);
+const shownFrame=()=>presentationFrame(current(),route);
+let player;
 const narration=new Audio();narration.preload='none';let audioFailed=false;
 narration.id='guidedNarration';narration.hidden=true;document.body.append(narration);
 const words = (en, zh) => session.language === 'zh' ? zh : en;
@@ -28,17 +32,25 @@ function stop() {
   playing = false; clearTimeout(timer); timer = null;
   player.pause();narration.pause();narration.onended=null;narration.onerror=null;
   window.speechSynthesis?.cancel();
-  $('play').textContent = words('Play story', '播放故事');
+   $('play').textContent = words('Play', '播放');
   document.body.dataset.playing = 'false';
 }
-function duration(frame) { return readingDuration(frame,session.language); }
-function syncPlayer(){player=new GuidedPlayer(STORIES[session.setting],session.positions[session.setting],session.language);}
+function duration(frame) { return readingDuration(presentationFrame(frame,route),session.language); }
+function syncPlayer(){player=new GuidedPlayer(routePositions().map(i=>presentationFrame(STORIES[session.setting][i],route)),routeOffset(),session.language);}
+function selectRoute(nextRoute) {
+  stop();route=nextRoute;choice=null;viewpoint='team';audioFailed=false;
+  if (!(route==='full'&&session.language==='en')&&!window.speechSynthesis) reading=false;
+  session.positions[session.setting]=routePositions()[0];
+  $('sceneDetails').open=false;$('recordDetails').open=false;
+  syncPlayer();render();
+  $('sceneTitle').focus({preventScroll:true});$('sceneTitle').scrollIntoView({block:'center',behavior:'instant'});
+}
 function schedule() {
   clearTimeout(timer);
   const token=++generation;
   if (!playing) { stop(); return; }
-  const last=session.positions[session.setting]===lengths[session.setting]-1;
-  if(reading && session.language==='en'){
+  const last=routeOffset()===routePositions().length-1;
+  if(reading && session.language==='en' && route==='full'){
     narration.src=`assets/narration/${current().id}.m4a`;
     let completed=false;
     const finish=()=>{if(completed||token!==generation||!playing)return;completed=true;clearTimeout(timer);timer=setTimeout(last?stop:advance,1200);};
@@ -48,12 +60,12 @@ function schedule() {
     // Do not strand the presentation if a browser fails to emit ended/error.
     timer=setTimeout(()=>{if(token===generation&&playing){narration.pause();fallback();}},120000);
   } else if (reading && window.speechSynthesis) {
-    const speech = new SpeechSynthesisUtterance(local(current().caption)); speech.lang = session.language === 'zh' ? 'zh-CN' : 'en-GB';
-    const fallback=()=>{if(playing&&token===generation){clearTimeout(timer);timer=setTimeout(last?stop:advance,duration(current()));}};
+    const speech = new SpeechSynthesisUtterance(local(shownFrame().caption)); speech.lang = session.language === 'zh' ? 'zh-CN' : 'en-GB';
+    const fallback=()=>{if(playing&&token===generation){window.speechSynthesis.cancel();reading=false;audioFailed=true;renderVoice();clearTimeout(timer);timer=setTimeout(last?stop:advance,duration(current()));}};
     speech.onend = () => { if (playing && token===generation){clearTimeout(timer);timer = setTimeout(last?stop:advance, 1000);} };
     speech.onerror = fallback;
     window.speechSynthesis.cancel(); window.speechSynthesis.speak(speech);
-    timer=setTimeout(fallback,120000);
+    timer=setTimeout(fallback,Math.max(15000,duration(current())+5000));
   } else {
     if(last){timer=setTimeout(stop,duration(current()));return;}
     player.play();
@@ -63,7 +75,7 @@ function schedule() {
 }
 function advance() {
   if (!playing) return;
-  session.positions[session.setting]++;
+  session.positions[session.setting]=routePositions()[routeOffset()+1];
   syncPlayer();
   render();
   schedule();
@@ -114,11 +126,11 @@ function renderMemory(frame) {
 }
 function renderChapters() {
   $('chapters').replaceChildren();
-  const chapters = [...new Set(STORIES[session.setting].map(f => f.chapter))];
+   const chapters = [...new Set(routePositions().map(i => STORIES[session.setting][i].chapter))];
   for (const chapter of chapters) {
     const button = node('button', local(LABELS[chapter])); button.dataset.chapter = chapter;
     if (current().chapter === chapter) button.setAttribute('aria-current', 'step');
-    button.onclick = () => { stop(); choice=null;viewpoint='team';session.positions[session.setting] = STORIES[session.setting].findIndex(f => f.chapter === chapter);syncPlayer();render(); document.querySelector(`[data-chapter="${chapter}"]`).focus(); };
+    button.onclick = () => { stop(); choice=null;viewpoint='team';session.positions[session.setting] = routePositions().find(i=>STORIES[session.setting][i].chapter===chapter);syncPlayer();render(); document.querySelector(`[data-chapter="${chapter}"]`).focus(); };
     $('chapters').append(button);
   }
 }
@@ -166,29 +178,38 @@ function renderSupport(frame){
   for(const text of s.notifications||[])panel.append(node('p',local(text),'team-update'));
 }
 function render() {
-  const frame = current();
+   const frame = current();
   document.documentElement.lang = session.language === 'zh' ? 'zh-CN' : 'en';
   document.body.dataset.setting = session.setting; document.body.dataset.frame = frame.id; document.body.dataset.stage = frame.memory || frame.chapter; document.body.dataset.playing = String(playing);
   $('language').textContent = words('中文', 'English'); $('sources').textContent = words('Sources & scope', '来源与范围');
-  $('tagline').textContent = words('Shared memory · reachable human judgement', '共享记忆 · 可获得的人类判断');
-  $('headline').textContent = words('One team. Support that continues.', '一个团队，持续获得支持。');
-  $('introText').textContent = words('Prepare for the assignment, practise with the team, then stay supported during care.', '为任务做好准备，与团队一起练习，并在照护过程中持续获得支持。');
+  document.body.dataset.route=route;
+  $('tagline').textContent = words('Preparation and care delivery', '任务准备与照护执行');
+  $('headline').textContent = words('Help your team carry out changing care.', '支持团队落实变化中的照护。');
+  $('introText').textContent = words('Prepare for assignments. Support follow-through through the systems your team already uses.', '为任务做好准备，通过团队现有系统支持持续跟进。');
+  $('supportRoute').textContent=words('Support care delivery · 6 scenes','支持照护执行 · 6 幕');
+  $('prepareRoute').textContent=words('Prepare your team','为团队做好准备');
+  $('supportRoute').setAttribute('aria-pressed',String(route==='support'));$('prepareRoute').setAttribute('aria-pressed',String(route==='prepare'));
+  $('fullJourney').textContent=words('Full walkthrough · all scenes','完整演示 · 所有场景');
+  $('fullJourney').setAttribute('aria-pressed',String(route==='full'));
+  $('routeScope').textContent=route==='prepare'?words('Optional preparation module · simulated team practice; hands-on readiness remains human-reviewed.','可单独选择的准备模块 · 模拟团队练习，实操准备仍由人类评估。'):words('Proposed connections to existing care records · this demo has no working system integration.','拟通过现有照护记录衔接 · 本演示没有实际系统连接。');
+  $('sceneDetailsLabel').textContent=words('Inspect scene details and original narration','查看场景细节与原始旁白');
+  $('recordDetailsLabel').textContent=words('Inspect task owners and records','查看任务负责人及记录');
   $('disclaimer').textContent = words('Scripted concept demo · fictional people and records · no live AI or clinical service', '预设概念演示 · 虚构人物与记录 · 无实时 AI 或临床服务');
   for (const setting of ['centre','home']) { $(`${setting}Tab`).textContent = local(LABELS[setting]); $(`${setting}Tab`).setAttribute('aria-pressed', String(session.setting === setting)); }
   renderChapters();
   $('location').textContent = local(frame.location); $('sceneTitle').textContent = local(frame.title);
   $('speaker').textContent = (frame.narratorEnglish&&session.language==='en')||frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(roleFor(frame.speaker,session.setting))}`;
-  $('caption').textContent = local(frame.caption); $('physicalAction').textContent = local(frame.action);
+  $('caption').textContent = local(shownFrame().caption); $('fullCaption').textContent=local(frame.caption);$('physicalAction').textContent = local(frame.action);
   renderScene($('scene'), frame, session.setting, session.language,frame.memory?replay(STORIES[session.setting],session.positions[session.setting],session.setting)[frame.memory]:null);
-  $('individualPractice').hidden = session.setting !== 'centre' || !(frame.chapter === 'prepare' || frame.memory === 'practice');
-  $('individualPracticeLink').textContent = words('Watch one-to-one care practice ↗', '观看一对一照护练习 ↗');
-  $('individualPracticeHint').textContent = words('Centre-based example · opens in a new tab. This story pauses here; return to this tab to continue.', '中心照护示例 · 在新标签页打开。本故事将在此暂停，返回本标签页即可继续。');
+  $('individualPractice').hidden = session.setting !== 'centre';
+  $('individualPracticeLink').textContent = words('See individual care practice ↗', '查看一对一照护练习 ↗');
+  $('individualPracticeHint').textContent = words('Centre-based · new tab · pauses this story', '中心照护 · 新标签页 · 暂停本故事');
   $('briefing').hidden = !frame.briefing; $('briefing').textContent = local(frame.briefing);
   renderSupport(frame);
   $('transitionCard').hidden = !frame.boundary;
   const handover=['rehearsal','handover'].includes(frame.chapter);
   $('transitionTitle').textContent = handover?local(LABELS[frame.chapter]):words('Practice and workplace support use separate records.', '练习与工作支持使用独立记录。');
-  $('transitionText').textContent = handover?words('The team checks outstanding items and their owners.','团队核对未完成事项及负责人。'):words('Hui Lin moves from rehearsal into her working assignment.','惠琳从练习进入工作任务。');
+  $('transitionText').textContent = handover?words('The team checks outstanding items and their owners.','团队核对未完成事项及负责人。'):session.setting==='centre'?words('Hui Lin moves from rehearsal into her working assignment.','惠琳从练习进入工作任务。'):words('Sara moves from rehearsal into her working visit.','Sara 从练习进入工作探访。');
   $('practiceChoice').hidden=true;
   $('choicePrompt').textContent=words('Practice decision: what do you need next? Both actions keep the human decision pending.','练习决定：接下来需要什么？以下操作均不会自动批准请求。');
   $('inspectPending').textContent=words('Inspect pending work','查看待办事项');$('contactHuman').textContent=words('Contact the responsible person','联系负责人');
@@ -196,18 +217,18 @@ function render() {
   $('viewControls').replaceChildren();
   // This focused scenario uses provider-team views only; no family-data branch.
   $('memoryTitle').textContent = words('Shared memory', '共享记忆'); renderMemory(frame);
-  $('position').textContent = `${session.positions[session.setting] + 1} / ${lengths[session.setting]}`;
-  $('progress').value = (session.positions[session.setting] + 1) / lengths[session.setting] * 100;
-  $('previous').disabled = session.positions[session.setting] === 0; $('next').disabled = session.positions[session.setting] === lengths[session.setting] - 1;
+  $('position').textContent = `${routeOffset()+1} / ${routePositions().length}`;
+  $('progress').value = (routeOffset()+1) / routePositions().length * 100;
+  $('previous').disabled = routeOffset()===0; $('next').disabled = routeOffset()===routePositions().length-1;
   $('previous').textContent = words('← Back', '← 返回');
   $('next').textContent = words('Next scene →', '下一幕 →');
   $('play').disabled = false;
-  $('play').textContent = playing ? words('Pause', '暂停') : words('Play guided demonstration', '播放引导演示');
+  $('play').textContent = playing ? words('Pause', '暂停') : words('Play', '播放');
   renderVoice();
-  $('restart').textContent = words('Restart this setting', '重新开始本场景');
+  $('restart').textContent = words('Restart this route', '重新开始本路线');
   $('resetAll').textContent=words('Reset demo','重置演示');
-  $('playbackHint').textContent = words('Follow the guided story through preparation, practice, supported work and handover. Enable narration to hear the story.','跟随引导故事查看准备、练习、工作支持及交接。开启旁白收听故事。');
-  $('mapTitle').textContent = words('The same support pattern, separate memories', '相同支持方式，独立保存记忆');
+  $('playbackHint').textContent = words('Choose a module or use Next. Inspect details only when needed.','选择模块或使用下一幕，需要时再查看细节。');
+  $('mapTitle').textContent = words('More about this demonstration', '关于本演示');
   $('mapContent').replaceChildren();
   for (const [title, text] of [
     [words('Prepare for the person', '为服务对象做好准备'), words('Relevant experience, local roles and person-specific knowledge determine what to practise.', '根据经验、本地职责与对服务对象的了解决定练习内容。')],
@@ -219,21 +240,22 @@ function render() {
 }
 function renderVoice(){
   $('read').textContent=reading?words('Narration: on','旁白：开'):words('Narration: off','旁白：关');
-  $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=session.language==='zh'&&!window.speechSynthesis;
-  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captioned playback continues.','音频不可用；字幕演示继续。'):session.language==='en'?words('Australian woman’s neural narration · Isla · synthetic voice','澳大利亚女性神经网络旁白 · Isla · 合成语音'):words('Chinese narration uses your browser voice.','中文旁白使用浏览器语音。');
+  $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=!(route==='full'&&session.language==='en')&&!window.speechSynthesis;
+  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captions continue.','音频不可用；字幕继续。'):route==='full'&&session.language==='en'?words('Synthetic voice · prerecorded Isla','合成语音 · 预录 Isla'):words('Synthetic voice · browser speech','合成语音 · 浏览器朗读');
 }
 $('individualPracticeLink').onclick = () => { stop(); persist(); };
 $('individualPracticeLink').onauxclick = event => { if (event.button === 1) { stop(); persist(); } };
-$('next').onclick = () => { stop(); choice=null;viewpoint='team';if (!$('next').disabled) { session.positions[session.setting]++;syncPlayer(); render(); } };
-$('previous').onclick = () => { stop();choice=null;viewpoint='team';if (!$('previous').disabled) { session.positions[session.setting]--;syncPlayer(); render(); } };
-$('restart').onclick = () => { stop();choice=null;viewpoint='team';session.positions[session.setting] = 0;syncPlayer();playing=true; render();schedule(); };
-$('resetAll').onclick=()=>{stop();if(storage)resetSession(storage);session=emptySession();viewpoint='team';choice=null;syncPlayer();render();};
+$('supportRoute').onclick=()=>selectRoute('support');$('prepareRoute').onclick=()=>selectRoute('prepare');$('fullJourney').onclick=()=>selectRoute('full');
+$('next').onclick = () => { stop(); choice=null;viewpoint='team';if (!$('next').disabled) { session.positions[session.setting]=routePositions()[routeOffset()+1];syncPlayer(); render(); } };
+$('previous').onclick = () => { stop();choice=null;viewpoint='team';if (!$('previous').disabled) { session.positions[session.setting]=routePositions()[routeOffset()-1];syncPlayer(); render(); } };
+$('restart').onclick = () => { selectRoute(route);playing=true; render();schedule(); };
+$('resetAll').onclick=()=>{stop();if(storage)resetSession(storage);session=emptySession();route='support';viewpoint='team';choice=null;syncPlayer();render();};
 $('inspectPending').onclick=()=>{stop();choice='inspect';render();$('inspectPending').focus();};
 $('contactHuman').onclick=()=>{stop();choice='contact';render();$('contactHuman').focus();};
 $('play').onclick = () => { if (playing) { stop(); return; } playing = true; render(); schedule(); };
 $('read').onclick = () => { const wasPlaying=playing;stop();reading = !reading;audioFailed=false;playing=wasPlaying;render();if(playing)schedule(); };
-$('language').onclick = () => { stop(); session.language = session.language === 'en' ? 'zh' : 'en';if(session.language==='zh'&&!window.speechSynthesis)reading=false;syncPlayer();render(); };
-for (const setting of ['centre','home']) $(`${setting}Tab`).onclick = () => { stop();viewpoint='team';choice=null;session.setting = setting;syncPlayer();render(); };
+$('language').onclick = () => { stop();audioFailed=false; session.language = session.language === 'en' ? 'zh' : 'en';if(session.language==='zh'&&!window.speechSynthesis)reading=false;syncPlayer();render(); };
+for (const setting of ['centre','home']) $(`${setting}Tab`).onclick = () => { session.setting = setting;selectRoute(route); };
 $('sources').onclick = () => {
   stop(); $('sourceTitle').textContent = words('Evidence and scope', '证据与范围'); $('closeSources').textContent = words('Close', '关闭');
   $('sourceBody').replaceChildren(node('p', words('The demo illustrates a proposed service. Responses, people, authorisations and records are staged. It has no backend, live AI, microphone input, real account or clinical approval. Browser progress and task state work locally.', '演示说明拟议服务。回应、人物、授权及记录均为预设。没有后端、实时 AI、麦克风输入、真实账号或临床批准。浏览器进度与任务状态在本地运行。')));
@@ -248,6 +270,8 @@ $('sources').onclick = () => {
 };
 $('closeSources').onclick = () => $('sourceDialog').close();
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
-render();
+$('audioControls').append($('read'));
+$('audioControls').append($('voiceStatus'));
+syncPlayer();render();
 // Silent autoplay obeys browser audio policy. Reduced-motion users choose Play.
-if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!document.hidden&&session.positions[session.setting]<lengths[session.setting]-1){playing=true;render();schedule();}
+if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!document.hidden&&routeOffset()<routePositions().length-1){playing=true;render();schedule();}

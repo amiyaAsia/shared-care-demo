@@ -2,9 +2,9 @@
 
 Separate public destination: https://amiyaasia.github.io/shared-care-demo/
 
-Source revision: `amiyaAsia/CareLab` merge `e2082afb72ade772f874d95bd22b9b81394e8a6b`, directory `demo/amiya-shared-care/`.43 reviewed files:11 runtime/assets and32 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
+Source revision: `amiyaAsia/CareLab` merge `9ff87361411b05a333b3402393f4f51f3281f3f7`, directory `demo/amiya-shared-care/`.43 reviewed files:11 runtime/assets and32 narration clips. Source/tests/design and private research stay in CareLab. `SHA256SUMS` binds this release to the exact reviewed build. Previous unused clips remain in repository history/files but are excluded from the Pages artifact.
 
-Centre preparation and practice include an optional bilingual link to the independently hosted one-to-one Care Practice example. It opens a new tab and pauses Shared Care at the current scene. Return to the original tab and choose Play to continue. The existing Care Practice site is unchanged.
+Default care delivery is six scenes; Prepare your team is a separate five-scene centre/four-scene home route. Full walkthrough retains all 16 scenes per setting. Short routes replay preceding events for correct task state. Details/records are collapsed; playback controls stay fixed in the viewport. The centre-only See individual care practice link is visible above the scene from opening, opens a new tab and pauses this story. Embodied Care is unchanged. Short narration uses browser synthetic speech matching concise captions; full English retains Isla recordings. No new metered speech or working care-system connection.
 
 Every opening/reload starts Care centre at the first scene. Saved language is retained; previous story positions are not resumed. In-page chapter and setting navigation remain available.
 

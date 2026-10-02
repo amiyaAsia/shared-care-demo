@@ -10,32 +10,38 @@
     <div class="header-actions"><button id="language" aria-label="Change language">中文</button><button id="sources">Sources &amp; scope</button></div>
   </header>
   <main>
-    <section class="intro"><p class="eyebrow" id="tagline">Shared memory · reachable human judgement</p><h1 id="headline">One team. Support that continues.</h1>
-      <p id="introText">Prepare for the assignment, practise with the team, then stay supported during care.</p>
+    <section class="intro"><p class="eyebrow" id="tagline">Preparation and care delivery</p><h1 id="headline">Help your team carry out changing care.</h1>
+      <p id="introText">Prepare for assignments. Support follow-through through the systems your team already uses.</p>
       <p class="disclaimer" id="disclaimer">Scripted concept demo · fictional people and records · no live AI or clinical service</p>
     </section>
     <nav class="setting-tabs" aria-label="Care setting"><button id="centreTab" data-setting="centre" aria-pressed="true">Care centre</button><button id="homeTab" data-setting="home" aria-pressed="false">Care at home</button></nav>
+    <nav class="module-tabs" aria-label="Product modules"><button id="supportRoute" aria-pressed="true">Support care delivery · 6 scenes</button><button id="prepareRoute" aria-pressed="false">Prepare your team</button></nav>
+    <button id="fullJourney" class="full-route" aria-pressed="false">Full walkthrough · all scenes</button>
+    <div id="individualPractice" class="practice-link"><a id="individualPracticeLink" href="https://amiyaasia.github.io/embodied-care-demo/" target="_blank" rel="noopener noreferrer">See individual care practice ↗</a><span id="individualPracticeHint" class="hint"></span></div>
+    <p id="routeScope" class="hint"></p>
     <nav id="chapters" class="chapters" aria-label="Story chapters"></nav>
-    <section class="stage-heading"><div><p id="location" class="eyebrow"></p><h2 id="sceneTitle"></h2></div><span id="stageBadge" class="stage-badge"></span></section>
+    <section class="stage-heading"><div><p id="location" class="eyebrow"></p><h2 id="sceneTitle" tabindex="-1"></h2></div><span id="stageBadge" class="stage-badge"></span></section>
     <div class="experience">
       <section class="story-panel" aria-label="Care scene">
-        <div id="scene" class="scene"></div>
         <div class="caption-panel"><div class="narrator-row"><p id="speaker" class="speaker"></p><button id="read" aria-pressed="false" aria-describedby="voiceStatus">Narration: off</button></div><p id="voiceStatus" class="hint" role="status"></p><div aria-live="polite" aria-atomic="true"><p id="caption" class="caption"></p><p id="physicalAction" class="physical-action"></p></div></div>
-        <div id="individualPractice" class="briefing" hidden><a id="individualPracticeLink" href="https://amiyaasia.github.io/embodied-care-demo/" target="_blank" rel="noopener noreferrer"></a><p id="individualPracticeHint" class="hint"></p></div>
+        <div id="scene" class="scene"></div>
+        <details id="sceneDetails" class="scene-details"><summary id="sceneDetailsLabel">Inspect scene details and full narration</summary>
+        <p id="fullCaption"></p>
         <div id="briefing" class="briefing" hidden></div>
         <div id="supportMoment" class="support-moment" hidden></div>
         <div id="practiceChoice" class="briefing" hidden><p id="choicePrompt"></p><button id="inspectPending">Inspect pending work</button> <button id="contactHuman">Contact the responsible person</button><p id="choiceFeedback" role="status"></p></div>
         <div id="transitionCard" class="transition-card" hidden><h3 id="transitionTitle"></h3><p id="transitionText"></p></div>
+        </details>
       </section>
-      <aside class="memory-panel" aria-labelledby="memoryTitle"><div class="memory-head"><span class="memory-mark">↔</span><div><h3 id="memoryTitle">Shared memory</h3><p id="memoryScope"></p></div></div>
+      <details id="recordDetails" class="memory-panel"><summary id="recordDetailsLabel">Inspect task owners and records</summary><div class="memory-head"><span class="memory-mark">↔</span><div><h3 id="memoryTitle">Shared memory</h3><p id="memoryScope"></p></div></div>
         <div id="viewControls" class="memory-views"></div><div id="memoryBody"></div>
-      </aside>
+      </details>
     </div>
     <section class="player" aria-label="Playback controls"><div class="progress-row"><span id="position"></span><progress id="progress" max="100" value="0" aria-label="Story progress"></progress></div>
-      <div class="controls"><button id="previous">← Back</button><button id="play">Play story</button><button id="next" class="primary">Continue →</button><button id="restart">Restart this setting</button><button id="resetAll">Reset demo</button></div>
+      <div class="controls"><button id="previous">← Back</button><button id="play">Play story</button><button id="next" class="primary">Continue →</button><div id="audioControls"></div></div>
       <p id="playbackHint" class="hint"></p><p id="storageNotice" class="hint" role="status" hidden></p>
     </section>
-    <section class="service-map" aria-labelledby="mapTitle"><h2 id="mapTitle">The same support pattern, separate memories</h2><div id="mapContent"></div></section>
+    <details class="service-map"><summary id="mapTitle">More about this demonstration</summary><div id="mapContent"></div><div class="controls"><button id="restart">Restart this route</button><button id="resetAll">Reset demo</button></div></details>
   </main>
   <footer><span id="footerText">Authored demonstration for discovery. Required practical assessment and professional decisions remain with people.</span></footer>
   <dialog id="sourceDialog" aria-labelledby="sourceTitle"><div class="dialog-head"><h2 id="sourceTitle">Evidence and scope</h2><button id="closeSources" autofocus>Close</button></div><div id="sourceBody"></div></dialog>
