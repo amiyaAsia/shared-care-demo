@@ -180,6 +180,9 @@ function render() {
   $('speaker').textContent = (frame.narratorEnglish&&session.language==='en')||frame.speaker==='Narrator'?local(ROLES.Narrator):frame.speaker === 'Hui Lin' && session.language === 'zh' ? '惠琳' : `${frame.speaker} · ${local(roleFor(frame.speaker,session.setting))}`;
   $('caption').textContent = local(frame.caption); $('physicalAction').textContent = local(frame.action);
   renderScene($('scene'), frame, session.setting, session.language,frame.memory?replay(STORIES[session.setting],session.positions[session.setting],session.setting)[frame.memory]:null);
+  $('individualPractice').hidden = session.setting !== 'centre' || !(frame.chapter === 'prepare' || frame.memory === 'practice');
+  $('individualPracticeLink').textContent = words('Watch one-to-one care practice ↗', '观看一对一照护练习 ↗');
+  $('individualPracticeHint').textContent = words('Centre-based example · opens in a new tab. This story pauses here; return to this tab to continue.', '中心照护示例 · 在新标签页打开。本故事将在此暂停，返回本标签页即可继续。');
   $('briefing').hidden = !frame.briefing; $('briefing').textContent = local(frame.briefing);
   renderSupport(frame);
   $('transitionCard').hidden = !frame.boundary;
@@ -219,6 +222,8 @@ function renderVoice(){
   $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=session.language==='zh'&&!window.speechSynthesis;
   $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captioned playback continues.','音频不可用；字幕演示继续。'):session.language==='en'?words('Australian woman’s neural narration · Isla · synthetic voice','澳大利亚女性神经网络旁白 · Isla · 合成语音'):words('Chinese narration uses your browser voice.','中文旁白使用浏览器语音。');
 }
+$('individualPracticeLink').onclick = () => { stop(); persist(); };
+$('individualPracticeLink').onauxclick = event => { if (event.button === 1) { stop(); persist(); } };
 $('next').onclick = () => { stop(); choice=null;viewpoint='team';if (!$('next').disabled) { session.positions[session.setting]++;syncPlayer(); render(); } };
 $('previous').onclick = () => { stop();choice=null;viewpoint='team';if (!$('previous').disabled) { session.positions[session.setting]--;syncPlayer(); render(); } };
 $('restart').onclick = () => { stop();choice=null;viewpoint='team';session.positions[session.setting] = 0;syncPlayer();playing=true; render();schedule(); };
