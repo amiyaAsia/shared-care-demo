@@ -1,5 +1,5 @@
 import { STORIES, LABELS, ROLES, SOURCES, roleFor } from './story.js';
-import { GuidedPlayer, readingDuration, journeyIndexes, presentationFrame } from './playback.js';
+import { GuidedPlayer, readingDuration, journeyIndexes, presentationFrame, narrationAsset } from './playback.js';
 import { emptySession, loadSession, saveSession, resetSession, replay,recall } from './memory.js';
 import { renderScene } from './scene.js';
 const $ = id => document.getElementById(id);
@@ -39,7 +39,7 @@ function duration(frame) { return readingDuration(presentationFrame(frame,route)
 function syncPlayer(){player=new GuidedPlayer(routePositions().map(i=>presentationFrame(STORIES[session.setting][i],route)),routeOffset(),session.language);}
 function selectRoute(nextRoute) {
   stop();route=nextRoute;choice=null;viewpoint='team';audioFailed=false;
-  if (!(route==='full'&&session.language==='en')&&!window.speechSynthesis) reading=false;
+  if (session.language!=='en'&&!window.speechSynthesis) reading=false;
   session.positions[session.setting]=routePositions()[0];
   $('sceneDetails').open=false;$('recordDetails').open=false;
   syncPlayer();render();
@@ -50,8 +50,8 @@ function schedule() {
   const token=++generation;
   if (!playing) { stop(); return; }
   const last=routeOffset()===routePositions().length-1;
-  if(reading && session.language==='en' && route==='full'){
-    narration.src=`assets/narration/${current().id}.m4a`;
+  if(reading && session.language==='en'){
+    narration.src=narrationAsset(current(),route);
     let completed=false;
     const finish=()=>{if(completed||token!==generation||!playing)return;completed=true;clearTimeout(timer);timer=setTimeout(last?stop:advance,1200);};
     const fallback=()=>{if(token!==generation||!playing)return;audioFailed=true;renderVoice();clearTimeout(timer);timer=setTimeout(last?stop:advance,duration(current()));};
@@ -240,8 +240,8 @@ function render() {
 }
 function renderVoice(){
   $('read').textContent=reading?words('Narration: on','旁白：开'):words('Narration: off','旁白：关');
-  $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=!(route==='full'&&session.language==='en')&&!window.speechSynthesis;
-  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captions continue.','音频不可用；字幕继续。'):route==='full'&&session.language==='en'?words('Synthetic voice · prerecorded Isla','合成语音 · 预录 Isla'):words('Synthetic voice · browser speech','合成语音 · 浏览器朗读');
+  $('read').setAttribute('aria-pressed',String(reading));$('read').disabled=session.language!=='en'&&!window.speechSynthesis;
+  $('voiceStatus').textContent=audioFailed?words('Audio unavailable; captions continue.','音频不可用；字幕继续。'):session.language==='en'?words('Synthetic voice · prerecorded Isla','合成语音 · 预录 Isla'):words('Synthetic voice · browser speech','合成语音 · 浏览器朗读');
 }
 $('individualPracticeLink').onclick = () => { stop(); persist(); };
 $('individualPracticeLink').onauxclick = event => { if (event.button === 1) { stop(); persist(); } };

@@ -53,6 +53,17 @@ export function readingDuration(frame, language = 'en') {
   const factor = language === 'zh' ? 180 : 55;
   return Math.max(7500, (caption.length + action.length) * factor, frame.boundary ? 12000 : 0);
 }
+export function narrationAsset(frame, route = 'support') {
+  return `assets/narration/${route === 'full' ? '' : 'short-'}${frame.id}.m4a`;
+}
+export function shortNarrationFrames(stories) {
+  return Object.entries(JOURNEYS).flatMap(([setting, routes]) =>
+    [...new Set(Object.values(routes).flat())].map(id => {
+      const frame = stories[setting].find(f => f.id === id);
+      if (!frame) throw new Error(`Missing narration scene ${id}`);
+      return presentationFrame(frame);
+    }));
+}
 export class GuidedPlayer {
   constructor(frames, index = 0, language = 'en') {
     this.frames = frames; this.index = index; this.language = language;
